@@ -17,15 +17,18 @@ app.use(helmet({
 }));
 
 const allowedOrigins = [
-    'http://localhost:3000',
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
-    process.env.SITE_URL || null,
+    /^https?:\/\/localhost(:\d+)?$/,
+    /^https:\/\/.*\.vercel\.app$/,
+    process.env.SITE_URL ? new RegExp(`^${process.env.SITE_URL.replace(/\./g, '\\.')}`) : null,
 ].filter(Boolean);
 
 app.use(cors({
     origin: (origin, cb) => {
-        if (!origin || allowedOrigins.some(o => origin.startsWith(o)))
-            return cb(null, true);
+        if (!origin) return cb(null, true);
+        const ok = allowedOrigins.some(o =>
+            o instanceof RegExp ? o.test(origin) : origin.startsWith(o)
+        );
+        if (ok) return cb(null, true);
         cb(new Error('CORS: origem não permitida'));
     },
 }));

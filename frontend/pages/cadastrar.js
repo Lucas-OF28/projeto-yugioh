@@ -407,9 +407,8 @@ document.getElementById('imagemFile').addEventListener('change', async function 
         return;
     }
 
-    const label = document.getElementById('imageUploadLabel');
-    const labelOrig = label.textContent;
-    label.textContent = 'Comprimindo...';
+    const labelText = document.getElementById('imageUploadLabelText');
+    labelText.textContent = 'Comprimindo...';
 
     try {
         const base64 = await compressImage(file);
@@ -423,7 +422,7 @@ document.getElementById('imagemFile').addEventListener('change', async function 
         alert('Não foi possível processar a imagem.');
         this.value = '';
     } finally {
-        label.textContent = labelOrig;
+        labelText.textContent = 'Selecionar arquivo local';
     }
 });
 
