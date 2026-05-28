@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../card-styles.css" />
+    <link rel="stylesheet" href="ver.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <title>Cartas Disponíveis - Yu-Gi-Oh!</title>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <h1 class="logo-text">Yu-Gi-Oh!</h1>
+            <p class="header-sub">Card Generator</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <a href="../index.html" class="btn-back">← Início</a>
+            <h2>Cartas Disponíveis</h2>
+            <a href="cadastrarCartas.html" class="btn btn-secondary btn-sm">+ Nova Carta</a>
+        </div>
+
+        <div class="filters-bar">
+            <div class="search-wrap">
+                <input type="text" id="searchInput" placeholder="Buscar carta pelo nome..." class="search-input" />
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="TODOS">Todos</button>
+                <button class="filter-btn" data-filter="MONSTRO">Monstros</button>
+                <button class="filter-btn" data-filter="MAGIA">Magias</button>
+                <button class="filter-btn" data-filter="ARMADILHA">Armadilhas</button>
+            </div>
+        </div>
+
+        <div class="cards-grid" id="cardsGrid">
+            <div class="loading">Carregando cartas...</div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Yu-Gi-Oh! Card Generator &mdash; By Jean Ricken &amp; Lucas Fabris</p>
+    </footer>
+
+    <script src="ver.js"></script>
+</body>
+</html>

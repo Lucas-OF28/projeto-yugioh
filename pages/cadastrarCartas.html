@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="../card-styles.css" />
+    <link rel="stylesheet" href="cadastro.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <title>Cadastrar Carta - Yu-Gi-Oh!</title>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <h1 class="logo-text">Yu-Gi-Oh!</h1>
+            <p class="header-sub">Card Generator</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <a href="verCartas.html" class="btn-back">← Cartas</a>
+            <h2 id="pageTitle">Nova Carta</h2>
+            <div style="width:80px"></div>
+        </div>
+
+        <div class="cadastro-layout">
+
+            <!-- ══ Formulário ══ -->
+            <div class="form-panel">
+                <form id="cartaForm" novalidate>
+
+                    <!-- Busca carta real -->
+                    <div class="search-real-section">
+                        <span class="section-label">Buscar carta real como base</span>
+                        <div class="search-real-row">
+                            <input type="text" id="searchRealInput" placeholder="Nome em inglês... Ex: Dark Magician, Blue-Eyes" />
+                            <button type="button" class="btn btn-secondary btn-sm" id="searchRealBtn">Buscar</button>
+                        </div>
+                        <div id="searchRealResults"></div>
+                    </div>
+
+                    <div class="form-divider"></div>
+
+                    <div class="form-group">
+                        <label for="nome">Nome da Carta *</label>
+                        <input type="text" id="nome" required placeholder="Ex: Dragão Negro de Olhos Vermelhos" maxlength="100" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipo">Tipo da Carta *</label>
+                        <select id="tipo">
+                            <option value="MONSTRO">Monstro</option>
+                            <option value="MAGIA">Magia</option>
+                            <option value="ARMADILHA">Armadilha</option>
+                        </select>
+                    </div>
+
+                    <!-- ══ Campos exclusivos de Monstro ══ -->
+                    <div id="monstroFields">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="atributo">Atributo</label>
+                                <select id="atributo">
+                                    <option value="">-- Selecione --</option>
+                                    <option value="FOGO">FOGO</option>
+                                    <option value="ÁGUA">ÁGUA</option>
+                                    <option value="TERRA">TERRA</option>
+                                    <option value="VENTO">VENTO</option>
+                                    <option value="LUZ">LUZ</option>
+                                    <option value="TREVAS">TREVAS</option>
+                                    <option value="DIVINO">DIVINO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipo_efeito">Subtipo</label>
+                                <select id="tipo_efeito">
+                                    <option value="Normal">Normal</option>
+                                    <option value="Efeito">Efeito</option>
+                                    <option value="Ritual">Ritual</option>
+                                    <option value="Fusão">Fusão</option>
+                                    <option value="Sincro">Sincro</option>
+                                    <option value="XYZ">XYZ</option>
+                                    <option value="Pêndulo">Pêndulo</option>
+                                    <option value="Link">Link</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Estrelas (oculto para Link) -->
+                        <div class="form-group" id="nivelGroup">
+                            <label><span id="nivelLabel">Nível</span>: <strong id="nivelValue">4</strong></label>
+                            <div class="star-picker" id="starPicker">
+                                <span class="star-item" data-value="1">★</span>
+                                <span class="star-item" data-value="2">★</span>
+                                <span class="star-item" data-value="3">★</span>
+                                <span class="star-item" data-value="4">★</span>
+                                <span class="star-item" data-value="5">★</span>
+                                <span class="star-item" data-value="6">★</span>
+                                <span class="star-item" data-value="7">★</span>
+                                <span class="star-item" data-value="8">★</span>
+                                <span class="star-item" data-value="9">★</span>
+                                <span class="star-item" data-value="10">★</span>
+                                <span class="star-item" data-value="11">★</span>
+                                <span class="star-item" data-value="12">★</span>
+                            </div>
+                            <input type="hidden" id="nivel" value="4" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tipo_monstro">Tipo do Monstro</label>
+                            <input type="text" id="tipo_monstro" placeholder="Ex: Dragão, Guerreiro, Feiticeiro..." maxlength="50" />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ataque">ATK</label>
+                                <input type="number" id="ataque" min="0" max="9999" placeholder="Ex: 2500" />
+                            </div>
+                            <div class="form-group" id="defesaGroup">
+                                <label for="defesa">DEF</label>
+                                <input type="number" id="defesa" min="0" max="9999" placeholder="Ex: 2000" />
+                            </div>
+                        </div>
+
+                        <!-- Materiais — Fusão / Sincro / XYZ -->
+                        <div class="form-group" id="materiaisGroup" style="display:none">
+                            <label for="materiais">Materiais</label>
+                            <textarea id="materiais" rows="2" placeholder="Ex: 2 Monstros de Nível 4..." maxlength="200"></textarea>
+                        </div>
+
+                        <!-- Campos de Pêndulo -->
+                        <div id="penduloFields" style="display:none">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="escala_esq">Escala Esquerda</label>
+                                    <input type="number" id="escala_esq" min="0" max="13" placeholder="0 – 13" />
+                                </div>
+                                <div class="form-group">
+                                    <label for="escala_dir">Escala Direita</label>
+                                    <input type="number" id="escala_dir" min="0" max="13" placeholder="0 – 13" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="efeito_pendulo">Efeito do Pêndulo</label>
+                                <textarea id="efeito_pendulo" rows="3" placeholder="Efeito da zona pêndulo..." maxlength="500"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Campos de Link -->
+                        <div id="linkFields" style="display:none">
+                            <div class="form-group">
+                                <label for="valor_link">Valor Link (LINK-N)</label>
+                                <input type="number" id="valor_link" min="1" max="6" placeholder="1 – 6" />
+                            </div>
+                            <div class="form-group">
+                                <label>Setas Link</label>
+                                <div class="link-arrows-selector">
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="NW">↖</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="N">↑</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="NE">↗</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="W">←</label>
+                                    <div class="arrow-center"></div>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="E">→</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="SW">↙</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="S">↓</label>
+                                    <label class="arrow-check"><input type="checkbox" class="seta-checkbox" value="SE">↘</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div><!-- /monstroFields -->
+
+                    <!-- ══ Campos de Magia ══ -->
+                    <div id="magiaFields" style="display:none">
+                        <div class="form-group">
+                            <label for="tipo_magia">Tipo de Magia</label>
+                            <select id="tipo_magia">
+                                <option value="">Normal</option>
+                                <option value="Contínua">Contínua</option>
+                                <option value="Equipamento">Equipamento</option>
+                                <option value="Campo">Campo</option>
+                                <option value="Jogo-Rápido">Jogo-Rápido</option>
+                                <option value="Ritual">Ritual</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ══ Campos de Armadilha ══ -->
+                    <div id="armadilhaFields" style="display:none">
+                        <div class="form-group">
+                            <label for="tipo_armadilha">Tipo de Armadilha</label>
+                            <select id="tipo_armadilha">
+                                <option value="">Normal</option>
+                                <option value="Contínua">Contínua</option>
+                                <option value="Contador">Contador</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descricao">Descrição / Efeito</label>
+                        <textarea id="descricao" rows="4" placeholder="Descreva o efeito ou a história do monstro..." maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Imagem <span class="label-optional">(opcional)</span></label>
+                        <div class="image-input-group">
+                            <input type="text" id="imagem" placeholder="Cole uma URL... https://" />
+                            <div class="image-or-divider"><span>ou</span></div>
+                            <label class="image-upload-label" id="imageUploadLabel">
+                                Selecionar arquivo local
+                                <input type="file" id="imagemFile" accept="image/*" hidden />
+                            </label>
+                            <p class="image-filename" id="imageFilename"></p>
+                            <div class="image-thumb-preview" id="imageThumbPreview"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-msg" id="formMsg"></div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Cadastrar Carta</button>
+                        <a href="verCartas.html" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ══ Prévia ══ -->
+            <div class="preview-panel">
+                <h3 class="preview-title">Prévia</h3>
+                <div id="previewCard"></div>
+                <button class="btn btn-secondary btn-sm preview-download-btn" id="downloadPreviewBtn">
+                    ↓ Baixar carta (PNG)
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <footer>
+        <p>Yu-Gi-Oh! Card Generator &mdash; By Jean Ricken &amp; Lucas Fabris</p>
+    </footer>
+
+    <script src="cadastrar.js"></script>
+</body>
+</html>

@@ -3,36 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Projeto Final Tema:Yu-Gi-Oh" />
-    <link rel="icon" alt="Carta." href="img/icon.jpg" type="image" />
-    <meta name="author" content="Jean Ricken & Lucas Fabris" />
+    <meta name="description" content="Gerador de Cartas Yu-Gi-Oh" />
     <link rel="stylesheet" href="style.css" />
-    <title>Projeto - Yu-Gi-Oh </title>        
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <title>Yu-Gi-Oh! Card Generator</title>
 </head>
 <body>
     <header>
-        <img src="./img/logo-yugioh.png" alt="logo-yugioh">
+        <div class="header-inner">
+            <h1 class="logo-text">Yu-Gi-Oh!</h1>
+            <p class="header-sub">Card Generator</p>
+        </div>
     </header>
 
-    <main>
-        <h4>Olá duelista, crie seus próprios cards, e não se esqueça, siga o coração das cartas</h4>
-        <h2>Cadastro de novas cartas</h2>
-        <div class="main">
-            <div class="button-container">
-                <a href="pages/cadastrarCartas.html" class="menu-button">Cadastrar cartas</a>
+    <main class="home-main">
+        <div class="hero">
+            <h2 class="hero-title">Crie suas próprias cartas</h2>
+            <p class="hero-subtitle">Olá duelista! Construa seu deck personalizado e siga o coração das cartas.</p>
+
+            <div class="hero-stats" id="statsContainer">
+                <div class="stat-card">
+                    <span class="stat-number" id="totalCartas">–</span>
+                    <span class="stat-label">Cartas</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalMonstros">–</span>
+                    <span class="stat-label">Monstros</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalMagias">–</span>
+                    <span class="stat-label">Magias</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="totalArmadilhas">–</span>
+                    <span class="stat-label">Armadilhas</span>
+                </div>
             </div>
-            <div class="button-container">
-                <a href="pages/verCartas.html" class="menu-button">Cartas disponiveis</a>
+
+            <div class="home-buttons">
+                <a href="pages/verCartas.html" class="btn btn-primary">Ver Cartas</a>
+                <a href="pages/cadastrarCartas.html" class="btn btn-secondary">Nova Carta</a>
             </div>
         </div>
     </main>
-    <footer>
-        <h3>Pagina By Jean Ricken and Lucas Fabris</h3>
-    </footer>    
-</body>
 
-<script src="index.js"></script>
-<script>
-    listar()
-</script>
+    <footer>
+        <p>Yu-Gi-Oh! Card Generator &mdash; By Jean Ricken &amp; Lucas Fabris</p>
+    </footer>
+
+    <script>
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/cartas');
+                const cartas = await res.json();
+                document.getElementById('totalCartas').textContent = cartas.length;
+                document.getElementById('totalMonstros').textContent = cartas.filter(c => c.tipo === 'MONSTRO').length;
+                document.getElementById('totalMagias').textContent = cartas.filter(c => c.tipo === 'MAGIA').length;
+                document.getElementById('totalArmadilhas').textContent = cartas.filter(c => c.tipo === 'ARMADILHA').length;
+            } catch {
+                document.getElementById('statsContainer').style.display = 'none';
+            }
+        }
+        loadStats();
+    </script>
+</body>
 </html>

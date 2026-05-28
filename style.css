@@ -1,121 +1,222 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap');
 
-
-html, body, main {
-    width: 100%;
-    height: 100%;
-    min-height: 100%;
+*, *::before, *::after {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    text-align: center;
-    border-color: blue;
-    background-color: red;
-    font-family: 'Acme', sans-serif;
 }
 
-main h1, h2, h3, h4 {
-    text-align: center;
-    color: white;
-}
-main{
-    background-image: url("https://store-images.s-microsoft.com/image/apps.42818.65935711642560027.0a5508b2-97cc-454e-bc78-fca0b9474931.eed4b951-b090-41e0-83a9-2af5b16761e4?mode=scale&q=90&h=1080&w=1920&format=jpg");
-}
-
-img {
-    border-radius: 50%;
-    width: 10rem;
-    margin-left: center;
-}
-nav{
-    flex-wrap: nowrap;
-    text-align: center;
-}
-nav ul{
-    padding: 1%;
-    display: flex;
-    text-align: center;
-
+:root {
+    --gold: #d4a017;
+    --gold-dark: #8b6914;
+    --dark: #1a1a2e;
+    --darker: #0f0f1a;
+    --text: #e8e8e8;
 }
 
-nav li{
-
-    text-align: center;
-    list-style-type: none;
-    margin-right: 8rem;
+html, body {
+    width: 100%;
+    min-height: 100vh;
+    font-family: 'Trebuchet MS', sans-serif;
+    background-color: var(--darker);
+    color: var(--text);
 }
 
-nav li a{
-
-    color: black;
-    text-decoration: none;
-    font-size: 1.80rem;
-    text-transform: uppercase;
-}
-
-nav li a:hover{
-    
-    color: blue;
-}
-
+/* ── Header ── */
 header {
-    background-color: black;
-    font-family: 'Acme', sans-serif;
-    height: 100%;
-    text-align: center;
-    height: 50px;
-    padding: 2rem;
-}
-
-footer {
-    background-color: black;
-    height: 100%;
-    text-align: center;
-    height: 50px;
-    padding: 1rem;
-}
-
-header h3{
-    color:white;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f0f1a 100%);
+    border-bottom: 3px solid var(--gold);
+    padding: 1rem 2rem;
     text-align: center;
 }
 
- footer h3 {
-    text-align: center;
-    color:  white;
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3rem;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212, 160, 23, 0.5), 2px 2px 0 #4a3800;
+    letter-spacing: 4px;
+}
+
+.header-sub {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.85rem;
+    letter-spacing: 6px;
     text-transform: uppercase;
-    line-height: 25px;
-    font-size: 15px;
 }
 
-.main {
-    height: calc(50% - 100px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* ── Footer ── */
+footer {
+    background: #0f0f1a;
+    border-top: 2px solid var(--gold-dark);
+    padding: 1.5rem;
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
 }
 
-.main .button-container {
-    width: 30%;
-    height: 30%;
+/* ── Home page ── */
+.home-main {
+    min-height: calc(100vh - 130px);
     display: flex;
     align-items: center;
     justify-content: center;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(212,160,23,0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(100,0,200,0.08) 0%, transparent 50%),
+        var(--darker);
 }
 
-.main .button-container a, .main .btn-voltar {    
-    padding: 20px;
-    border: 1px solid black;
+.hero {
+    text-align: center;
+    padding: 3rem 2rem;
+    max-width: 700px;
+    width: 100%;
+}
+
+.hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: 2.5rem;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    text-shadow: 0 0 20px rgba(212,160,23,0.3);
+}
+
+.hero-subtitle {
+    color: rgba(255,255,255,0.65);
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+}
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(212,160,23,0.3);
     border-radius: 10px;
-    color: black;
-    background-color: white;
-    position: relative;
+    padding: 1rem 1.5rem;
+    min-width: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-number {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.45);
+}
+
+/* ── Buttons ── */
+.home-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
     text-decoration: none;
-    transition: color 1s, background-color 1s, border 1s;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    display: inline-block;
+    letter-spacing: 1px;
+    font-family: inherit;
 }
 
-.main .button-container a:hover, .main .btn-voltar:hover {
-    background-color:black;
-    color: yellow;
-    border: 1px solid white;
+.btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #1a1a2e;
 }
 
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e8b428, var(--gold));
+    box-shadow: 0 4px 20px rgba(212,160,23,0.4);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--gold);
+    border: 2px solid var(--gold);
+}
+
+.btn-secondary:hover {
+    background: rgba(212,160,23,0.1);
+    box-shadow: 0 4px 16px rgba(212,160,23,0.2);
+    transform: translateY(-2px);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #c0392b, #922b21);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    transform: translateY(-2px);
+}
+
+.btn-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ── Inner page layout ── */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.page-header h2 {
+    font-family: 'Cinzel', serif;
+    color: var(--gold);
+    font-size: 1.5rem;
+}
+
+.btn-back {
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-back:hover {
+    color: var(--gold);
+}
