@@ -10,12 +10,27 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));   // suporta imagens em base64
 app.use(express.static(path.join(__dirname)));
 
+// ── Diagnóstico (apenas para debug — remova após resolver) ─
+app.get('/api/debug', (req, res) => {
+    const uri = process.env.MONGODB_URI || '';
+    res.json({
+        mode:          uri ? 'mongodb' : 'json-local',
+        mongodb_uri_set: !!uri,
+        uri_preview:   uri
+            ? uri.replace(/:\/\/[^:]+:[^@]+@/, '://***:***@')
+            : 'NÃO DEFINIDA',
+        node_version:  process.version,
+        env:           process.env.NODE_ENV || 'undefined',
+    });
+});
+
 // ── GET all ──────────────────────────────────────────────
 app.get('/api/cartas', async (req, res) => {
     try {
         res.json(await db.all());
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao listar cartas.' });
+        console.error('[GET /api/cartas]', e);
+        res.status(500).json({ error: 'Erro ao listar cartas.', details: e.message });
     }
 });
 

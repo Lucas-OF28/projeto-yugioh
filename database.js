@@ -1,6 +1,10 @@
 const fs   = require('fs');
 const path = require('path');
 
+// Importação no nível superior — obrigatório para o Vercel detectar a dependência
+const mongodb = require('mongodb');
+const { MongoClient } = mongodb;
+
 // ── Adaptador JSON — desenvolvimento local ──────────────
 function createJsonDB() {
     const DB_FILE = path.join(__dirname, 'yugioh.json');
@@ -40,30 +44,24 @@ function createJsonDB() {
 }
 
 // ── Adaptador MongoDB — produção (Vercel + Atlas) ───────
-// Reutiliza a conexão entre invocações serverless quentes (warm)
+// Usa promise cacheada no global para reutilizar conexão entre warm invocations
 function createMongoDB() {
-    const { MongoClient } = require('mongodb');
-
-    // Cacheado no objeto global para sobreviver ao warm-start
-    if (!global._mongoClient) {
-        global._mongoClient = new MongoClient(process.env.MONGODB_URI, {
+    if (!global._mongoClientPromise) {
+        const client = new MongoClient(process.env.MONGODB_URI, {
             serverSelectionTimeoutMS: 5000,
             connectTimeoutMS:         5000,
             socketTimeoutMS:          10000,
         });
+        global._mongoClientPromise = client.connect().then(() => client);
     }
 
-    const client = global._mongoClient;
-
     async function getDB() {
-        if (!client.topology || !client.topology.isConnected()) {
-            await client.connect();
-        }
+        const client = await global._mongoClientPromise;
         return client.db('yugioh');
     }
 
-    async function nextId(database) {
-        const result = await database.collection('counters').findOneAndUpdate(
+    async function nextId(db) {
+        const result = await db.collection('counters').findOneAndUpdate(
             { _id: 'cartaId' },
             { $inc: { seq: 1 } },
             { upsert: true, returnDocument: 'after' }
