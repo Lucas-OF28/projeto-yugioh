@@ -230,7 +230,7 @@ function showSearchResults(cards) {
         }</div>`;
 }
 
-function useRealCard(cardId) {
+async function useRealCard(cardId) {
     const card = lastSearchResults.find(c => c.id === cardId);
     if (!card) return;
 
@@ -242,7 +242,7 @@ function useRealCard(cardId) {
 
     document.getElementById('nome').value      = card.name;
     document.getElementById('descricao').value = card.desc || '';
-    document.getElementById('imagem').value    = card.card_images[0].image_url;
+    document.getElementById('imagem').value    = '';
 
     if (typeInfo.tipo === 'MONSTRO') {
         document.getElementById('atributo').value     = ATTR_MAP[card.attribute] || '';
@@ -265,6 +265,29 @@ function useRealCard(cardId) {
     document.getElementById('searchRealResults').innerHTML = '';
     document.getElementById('searchRealInput').value = '';
     updatePreview();
+
+    // Busca imagem via proxy → converte para base64 (evita CORS no preview e no export)
+    const labelText = document.getElementById('imageUploadLabelText');
+    if (labelText) labelText.textContent = 'Carregando imagem...';
+
+    try {
+        const imageUrl = card.card_images[0].image_url;
+        const res = await fetch(`/api/proxy-image?url=${encodeURIComponent(imageUrl)}`);
+        if (!res.ok) throw new Error('proxy failed');
+        const blob = await res.blob();
+        const file = new File([blob], `${card.name}.jpg`, { type: blob.type || 'image/jpeg' });
+        const base64 = await compressImage(file);
+        document.getElementById('imagem').value = base64;
+        document.getElementById('imageFilename').textContent = card.name;
+        document.getElementById('imageThumbPreview').innerHTML = `<img src="${base64}" alt="preview" />`;
+        updatePreview();
+    } catch {
+        // fallback: usa URL direta (preview pode falhar em exports, mas pelo menos mostra)
+        document.getElementById('imagem').value = card.card_images[0].image_url;
+        updatePreview();
+    } finally {
+        if (labelText) labelText.textContent = 'Selecionar arquivo local';
+    }
 }
 
 // ── Download da prévia ────────────────────────────────────

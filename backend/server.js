@@ -3,6 +3,7 @@ const cors      = require('cors');
 const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path      = require('path');
+const https     = require('https');
 const db        = require('./database');
 
 const app    = express();
@@ -143,6 +144,23 @@ function validateCarta(body) {
 function errDetail(e) {
     return isProd ? {} : { details: e.message };
 }
+
+// ── Proxy de imagem (YGOPRODeck → base64 sem CORS) ───────
+app.get('/api/proxy-image', apiLimiter, (req, res) => {
+    const { url } = req.query;
+    if (!url || !url.startsWith('https://images.ygoprodeck.com/')) {
+        return res.status(400).json({ error: 'URL não permitida.' });
+    }
+    https.get(url, (imgRes) => {
+        if (imgRes.statusCode !== 200) {
+            imgRes.resume();
+            return res.status(502).json({ error: 'Falha ao buscar imagem.' });
+        }
+        res.setHeader('Content-Type', imgRes.headers['content-type'] || 'image/jpeg');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        imgRes.pipe(res);
+    }).on('error', () => res.status(502).json({ error: 'Falha ao buscar imagem.' }));
+});
 
 // ── Rotas da API ─────────────────────────────────────────
 
