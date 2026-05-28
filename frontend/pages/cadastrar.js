@@ -367,26 +367,64 @@ function showMsg(text, type) {
     el.className = 'form-msg ' + type;
 }
 
+// ── Compressão de imagem ──────────────────────────────────
+function compressImage(file, { maxDim = 1200, quality = 0.85 } = {}) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            let { width, height } = img;
+            if (width > maxDim || height > maxDim) {
+                if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+                else                 { width  = Math.round(width  * maxDim / height); height = maxDim; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width  = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Falha ao carregar imagem')); };
+        img.src = url;
+    });
+}
+
+function fmtSize(bytes) {
+    return bytes >= 1024 * 1024
+        ? (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+        : Math.round(bytes / 1024) + ' KB';
+}
+
 // ── Upload de imagem local ────────────────────────────────
-document.getElementById('imagemFile').addEventListener('change', function () {
+document.getElementById('imagemFile').addEventListener('change', async function () {
     const file = this.files[0];
     if (!file) return;
 
-    if (file.size > 4 * 1024 * 1024) {
-        alert('Arquivo muito grande. Use uma imagem menor que 4 MB.');
+    if (file.size > 20 * 1024 * 1024) {
+        alert('Arquivo muito grande. Use uma imagem menor que 20 MB.');
         this.value = '';
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const base64 = e.target.result;
+    const label = document.getElementById('imageUploadLabel');
+    const labelOrig = label.textContent;
+    label.textContent = 'Comprimindo...';
+
+    try {
+        const base64 = await compressImage(file);
+        const compBytes = Math.round(base64.length * 0.75);
         document.getElementById('imagem').value = base64;
-        document.getElementById('imageFilename').textContent = file.name;
+        document.getElementById('imageFilename').textContent =
+            `${file.name}  (${fmtSize(file.size)} → ${fmtSize(compBytes)})`;
         document.getElementById('imageThumbPreview').innerHTML = `<img src="${base64}" alt="preview" />`;
         updatePreview();
-    };
-    reader.readAsDataURL(file);
+    } catch {
+        alert('Não foi possível processar a imagem.');
+        this.value = '';
+    } finally {
+        label.textContent = labelOrig;
+    }
 });
 
 document.getElementById('imagem').addEventListener('input', function () {
