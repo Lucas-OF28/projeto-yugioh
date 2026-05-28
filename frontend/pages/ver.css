@@ -38,7 +38,7 @@
     font-family: inherit;
 }
 
-.filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+.filter-btn:hover  { border-color: var(--gold); color: var(--gold); }
 .filter-btn.active { background: var(--gold); border-color: var(--gold); color: #1a1a2e; font-weight: bold; }
 
 .sort-select {
@@ -86,10 +86,9 @@
     font-family: inherit;
 }
 
-.attr-btn:hover { border-color: rgba(255,255,255,0.5); color: white; }
+.attr-btn:hover  { border-color: rgba(255,255,255,0.5); color: white; }
 .attr-btn.active { background: var(--gold); border-color: var(--gold); color: #1a1a2e; font-weight: bold; }
 
-/* Cores por atributo quando activo */
 .attr-fogo-btn.active   { background: #c01010; border-color: #c01010; color: white; }
 .attr-agua-btn.active   { background: #0830c0; border-color: #0830c0; color: white; }
 .attr-terra-btn.active  { background: #8b6914; border-color: #8b6914; color: white; }
@@ -122,32 +121,59 @@
 .cards-grid {
     max-width: 1300px;
     margin: 0 auto;
-    padding: 0 2rem 4rem;
+    padding: 0 2rem 5rem;
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
     justify-content: center;
+    align-items: flex-start;
 }
 
+/* ── Card wrapper com overlay de ações ── */
 .card-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.65rem;
+    position: relative;
+    width: 280px;
+    height: 412px;
+    border-radius: 10px;
+    overflow: hidden;
     animation: fadeIn 0.3s ease;
+    flex-shrink: 0;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Overlay deslizante com os botões de ação */
 .card-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    background: linear-gradient(
+        to top,
+        rgba(4, 4, 18, 0.97) 0%,
+        rgba(4, 4, 18, 0.93) 50%,
+        rgba(4, 4, 18, 0.70) 75%,
+        transparent 100%
+    );
+    padding: 2.5rem 0.7rem 0.7rem;
     display: flex;
-    gap: 0.4rem;
+    gap: 0.35rem;
     flex-wrap: wrap;
     justify-content: center;
+    border-radius: 0 0 10px 10px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
 }
+
+.card-wrapper:hover .card-actions { opacity: 1; transform: translateY(0); }
+
+/* Botões dentro do overlay: mais compactos */
+.card-actions .btn { font-size: 0.78rem; padding: 0.35rem 0.75rem; }
 
 .loading, .empty {
     text-align: center;
@@ -163,6 +189,43 @@
     font-size: 1rem;
     padding: 4rem;
     width: 100%;
+}
+
+/* ── Botão estrela (favorito) ── */
+.btn-fav {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.45);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    font-family: inherit;
+}
+.btn-fav:hover  { color: #f0c040; border-color: #f0c040; }
+.btn-fav.active { color: #f0c040; border-color: #c8900a; background: rgba(200,144,10,0.18); }
+
+#favFilterBtn.active { background: #c8900a; border-color: #c8900a; color: white; }
+
+.modal-action-buttons .fav-active {
+    background: rgba(200,144,10,0.2) !important;
+    border-color: #c8900a !important;
+    color: #f0c040 !important;
+}
+
+/* Mobile: ações sempre visíveis abaixo da carta */
+@media (max-width: 600px) {
+    .card-wrapper        { height: auto; overflow: visible; }
+    .card-actions        {
+        position: static;
+        opacity: 1;
+        transform: none;
+        background: transparent;
+        padding: 0.5rem 0 0;
+        transition: none;
+    }
 }
 
 /* ── Modal fullscreen ── */
@@ -212,10 +275,9 @@
     cursor: default;
 }
 
-/* Wrapper com tamanho real da carta escalada para evitar sobreposição */
 .modal-card-scale-wrapper {
-    width: 420px;   /* 280 × 1.5 */
-    height: 618px;  /* 412 × 1.5 */
+    width: 420px;
+    height: 618px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -249,26 +311,80 @@
     margin-top: -0.5rem;
 }
 
-/* ── Botão estrela (favorito) ── */
-.btn-fav {
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.35);
+/* ── Popup de confirmação de exclusão ── */
+@keyframes popup-in {
+    from { opacity: 0; transform: scale(0.88) translateY(-12px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.delete-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.delete-popup-overlay.active { display: flex; }
+
+.delete-popup {
+    background: linear-gradient(160deg, #14142a 0%, #1c1030 100%);
+    border: 1px solid rgba(231, 76, 60, 0.35);
+    border-radius: 14px;
+    padding: 2rem 2rem 1.5rem;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow:
+        0 0 0 1px rgba(231,76,60,0.12),
+        0 24px 70px rgba(0,0,0,0.85);
+    animation: popup-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.delete-popup-icon {
+    font-size: 2.2rem;
+    color: #e74c3c;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 0 8px rgba(231,76,60,0.5));
+}
+
+.delete-popup-title {
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+    letter-spacing: 0.2px;
+}
+
+.delete-popup-card-name {
+    color: var(--gold);
+    font-size: 1rem;
+    font-style: italic;
+    font-family: 'Cinzel', Georgia, serif;
+    margin: 0 0 0.5rem;
+    padding: 0.3rem 0.75rem;
+    background: rgba(212,160,23,0.08);
     border-radius: 6px;
-    padding: 0.3rem 0.55rem;
-    cursor: pointer;
-    font-size: 1.05rem;
-    line-height: 1;
-    transition: color 0.2s, border-color 0.2s, background 0.2s;
-    font-family: inherit;
+    border: 1px solid rgba(212,160,23,0.2);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.btn-fav:hover  { color: #f0c040; border-color: #f0c040; }
-.btn-fav.active { color: #f0c040; border-color: #c8900a; background: rgba(200,144,10,0.15); }
 
-#favFilterBtn.active { background: #c8900a; border-color: #c8900a; color: white; }
-
-.modal-action-buttons .fav-active {
-    background: rgba(200,144,10,0.2) !important;
-    border-color: #c8900a !important;
-    color: #f0c040 !important;
+.delete-popup-desc {
+    color: rgba(255,255,255,0.42);
+    font-size: 0.82rem;
+    margin: 0 0 1.6rem;
 }
+
+.delete-popup-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.delete-popup-actions .btn { min-width: 110px; }

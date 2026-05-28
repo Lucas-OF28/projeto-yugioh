@@ -141,9 +141,42 @@ async function baixarCarta(id) {
     }
 }
 
+// ── Popup de confirmação de exclusão ───────────────────────────
+function showDeletePopup(nome) {
+    return new Promise(resolve => {
+        document.getElementById('deletePopupCardName').textContent = `"${nome}"`;
+        const overlay = document.getElementById('deletePopup');
+        const btnConf = document.getElementById('deletePopupConfirm');
+        const btnCanc = document.getElementById('deletePopupCancel');
+
+        overlay.classList.add('active');
+
+        const done = result => {
+            overlay.classList.remove('active');
+            btnConf.removeEventListener('click', onConf);
+            btnCanc.removeEventListener('click', onCanc);
+            document.removeEventListener('keydown', onKey);
+            resolve(result);
+        };
+
+        const onConf = () => done(true);
+        const onCanc = () => done(false);
+        const onKey  = e => { if (e.key === 'Escape') done(false); };
+
+        btnConf.addEventListener('click', onConf, { once: true });
+        btnCanc.addEventListener('click', onCanc, { once: true });
+        document.addEventListener('keydown', onKey);
+
+        overlay.addEventListener('click', function handler(e) {
+            if (e.target === overlay) { overlay.removeEventListener('click', handler); done(false); }
+        });
+    });
+}
+
 // ── Deletar ─────────────────────────────────────────────────────
 async function deletar(id, nome) {
-    if (!confirm(`Deletar a carta "${nome}"?`)) return;
+    const confirmed = await showDeletePopup(nome);
+    if (!confirmed) return;
     try {
         const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
         if (res.ok) { allCards = allCards.filter(c => c.id !== id); renderCards(); }

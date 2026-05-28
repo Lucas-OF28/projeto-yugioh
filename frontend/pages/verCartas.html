@@ -99,6 +99,20 @@
         </div>
     </div>
 
+    <!-- Popup de confirmação de exclusão -->
+    <div class="delete-popup-overlay" id="deletePopup">
+        <div class="delete-popup">
+            <div class="delete-popup-icon">⚠</div>
+            <h3 class="delete-popup-title">Deletar esta carta?</h3>
+            <p class="delete-popup-card-name" id="deletePopupCardName"></p>
+            <p class="delete-popup-desc">Esta ação não pode ser desfeita.</p>
+            <div class="delete-popup-actions">
+                <button class="btn btn-secondary" id="deletePopupCancel">Cancelar</button>
+                <button class="btn btn-danger"    id="deletePopupConfirm">Deletar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="card-builder.js"></script>
     <script src="ver.js"></script>
 </body>
