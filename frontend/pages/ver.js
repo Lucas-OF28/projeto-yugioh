@@ -1,18 +1,5 @@
 const API = '/api/cartas';
 
-// ── Constantes ─────────────────────────────────────────────────
-const ATTR_CLASS = {
-    'FOGO':'attr-fogo','ÁGUA':'attr-agua','TERRA':'attr-terra',
-    'VENTO':'attr-vento','LUZ':'attr-luz','TREVAS':'attr-trevas','DIVINO':'attr-divino'
-};
-const CARD_CLASS = {
-    'Normal':'monstro-normal','Efeito':'monstro-efeito','Ritual':'monstro-ritual',
-    'Fusão':'monstro-fusao','Sincro':'monstro-sincro','XYZ':'monstro-xyz',
-    'Pêndulo':'monstro-pendulo','Link':'monstro-link'
-};
-const ARROW_SYM   = { NW:'↖',N:'↑',NE:'↗',W:'←',E:'→',SW:'↙',S:'↓',SE:'↘' };
-const ARROW_ORDER = ['NW','N','NE','W',null,'E','SW','S','SE'];
-
 // ── Estado ─────────────────────────────────────────────────────
 let allCards     = [];
 let activeFilter = 'TODOS';
@@ -21,120 +8,12 @@ let activeSort   = 'recente';
 let activeFavOnly = false;
 let favorites    = new Set(JSON.parse(localStorage.getItem('ygo-favorites') || '[]'));
 
-// ── Helpers ────────────────────────────────────────────────────
-function esc(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-function getCardClass(tipo, subtipo) {
-    if (tipo === 'MAGIA') return 'magia';
-    if (tipo === 'ARMADILHA') return 'armadilha';
-    return CARD_CLASS[subtipo] || 'monstro-efeito';
-}
-
-function buildLinkArrowsMini(setasStr) {
-    const active = setasStr ? setasStr.split(',') : [];
-    return '<div class="link-arrows-mini">' +
-        ARROW_ORDER.map(dir => {
-            if (!dir) return '<div class="link-arrow-mini-cell"></div>';
-            return `<div class="link-arrow-mini-cell${active.includes(dir) ? ' active' : ''}">${ARROW_SYM[dir]}</div>`;
-        }).join('') + '</div>';
-}
-
-// ── Constrói o elemento .ygo-card (sem wrapper) ─────────────────
-function buildYgoCardHTML(carta) {
-    const subtipo   = carta.tipo_efeito || 'Efeito';
-    const cardClass = getCardClass(carta.tipo, subtipo);
-    const isLink    = subtipo === 'Link';
-    const isPendulo = subtipo === 'Pêndulo';
-    const isXYZ     = subtipo === 'XYZ';
-    const isNormal  = subtipo === 'Normal';
-    const isMonstro = carta.tipo === 'MONSTRO';
-
-    const attrClass = ATTR_CLASS[carta.atributo] || '';
-    const attrLabel = carta.atributo ? carta.atributo.substring(0, 3) : '';
-
-    const imageContent = carta.imagem
-        ? `<img src="${esc(carta.imagem)}" alt="${esc(carta.nome)}" crossorigin="anonymous" onerror="this.parentElement.innerHTML='<span class=card-no-img>?</span>'" />`
-        : '<span class="card-no-img">?</span>';
-
-    let starsHTML = '';
-    if (isMonstro && !isLink) {
-        const count = Math.min(Number(carta.nivel) || 0, 12);
-        if (count > 0)
-            starsHTML = `<div class="card-stars">${'<span class="star-gem"></span>'.repeat(count)}</div>`;
-    }
-
-    let typeText = '';
-    if (isMonstro) {
-        const t = carta.tipo_monstro || 'Monstro';
-        typeText = `[${t}${subtipo && subtipo !== 'Normal' ? '/' + subtipo : ''}]`;
-    } else if (carta.tipo === 'MAGIA') {
-        typeText = `Carta de Magia${carta.tipo_magia ? ' – ' + carta.tipo_magia : ''}`;
-    } else {
-        typeText = `Carta de Armadilha${carta.tipo_armadilha ? ' – ' + carta.tipo_armadilha : ''}`;
-    }
-
-    const materiaisHTML = isMonstro && ['Fusão','Sincro','XYZ'].includes(subtipo) && carta.materiais
-        ? `<div class="card-materials"><p>${esc(carta.materiais)}</p></div>` : '';
-
-    const pendulumHTML = isPendulo ? `
-        <div class="card-pendulum-section">
-            <div class="pendulum-scale-box">
-                <span class="scale-label">ESC</span>
-                <span class="scale-num">${carta.escala_esq ?? '?'}</span>
-            </div>
-            <div class="pendulum-effect-box">
-                <p class="pendulum-effect-text">${esc(carta.efeito_pendulo || '')}</p>
-            </div>
-            <div class="pendulum-scale-box">
-                <span class="scale-label">ESC</span>
-                <span class="scale-num">${carta.escala_dir ?? '?'}</span>
-            </div>
-        </div>` : '';
-
-    let statsHTML = '';
-    if (isMonstro) {
-        statsHTML = isLink
-            ? `<div class="card-stats-link">
-                   <span>ATK/${carta.ataque ?? '?'}</span>
-                   ${buildLinkArrowsMini(carta.setas_link || '')}
-                   <span>LINK-${carta.valor_link ?? '?'}</span>
-               </div>`
-            : `<div class="card-stats">ATK/${carta.ataque ?? '?'} &nbsp; DEF/${carta.defesa ?? '?'}</div>`;
-    }
-
-    const descClass = isPendulo ? 'card-description-box compact' : 'card-description-box';
-    const descStyle = isNormal ? 'font-style:italic' : '';
-
-    return `
-    <div class="ygo-card ${cardClass}" data-id="${carta.id}" onclick="openModal(${carta.id})" style="cursor:pointer">
-      <div class="card-inner">
-        <div class="card-name-bar">
-            <span class="card-name">${esc(carta.nome)}</span>
-            ${carta.atributo ? `<span class="card-attribute ${attrClass}">${attrLabel}</span>` : ''}
-        </div>
-        ${starsHTML}
-        <div class="card-image-area">${imageContent}</div>
-        ${materiaisHTML}
-        <div class="card-type-text">${typeText}</div>
-        ${pendulumHTML}
-        <div class="${descClass}">
-            <p class="card-description" style="${descStyle}">${esc(carta.descricao || '')}</p>
-        </div>
-        ${statsHTML}
-      </div>
-    </div>`;
-}
-
 // ── Wrapper com botões de ação ──────────────────────────────────
 function buildCardHTML(carta) {
     const isFav = favorites.has(carta.id);
     return `
     <div class="card-wrapper">
-        ${buildYgoCardHTML(carta)}
+        ${buildYgoCard(carta, { clickable: true })}
         <div class="card-actions">
             <button class="btn-fav${isFav ? ' active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${carta.id})" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">★</button>
             <a href="cadastrarCartas.html?id=${carta.id}"    class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">Editar</a>
@@ -145,7 +24,7 @@ function buildCardHTML(carta) {
     </div>`;
 }
 
-// ── Filtro + Ordenação ──────────────────────────────────────────
+// ── Ordenação ───────────────────────────────────────────────────
 function sortCards(cards) {
     const c = [...cards];
     switch (activeSort) {
@@ -161,6 +40,7 @@ function sortCards(cards) {
     }
 }
 
+// ── Filtros ─────────────────────────────────────────────────────
 function getFiltered() {
     const search = document.getElementById('searchInput').value.toLowerCase().trim();
     let filtered = allCards;
@@ -189,22 +69,18 @@ function renderCards() {
     const grid     = document.getElementById('cardsGrid');
     const filtered = getFiltered();
 
-    // Contador
     const total = allCards.length;
     const shown = filtered.length;
     document.getElementById('cardCounter').textContent =
         shown === total ? `${total} carta${total !== 1 ? 's' : ''}`
                         : `${shown} de ${total} carta${total !== 1 ? 's' : ''}`;
 
-    // Filtro de atributo — visível só quando filtrando Monstros
     document.getElementById('attrFilters').style.display =
         activeFilter === 'MONSTRO' ? 'flex' : 'none';
 
-    if (filtered.length === 0) {
-        grid.innerHTML = '<div class="empty">Nenhuma carta encontrada.</div>';
-        return;
-    }
-    grid.innerHTML = filtered.map(buildCardHTML).join('');
+    grid.innerHTML = filtered.length
+        ? filtered.map(buildCardHTML).join('')
+        : '<div class="empty">Nenhuma carta encontrada.</div>';
 }
 
 // ── Modal fullscreen ────────────────────────────────────────────
@@ -212,7 +88,7 @@ function openModal(id) {
     const carta = allCards.find(c => c.id === id);
     if (!carta) return;
 
-    document.getElementById('modalCardContainer').innerHTML = buildYgoCardHTML(carta);
+    document.getElementById('modalCardContainer').innerHTML = buildYgoCard(carta);
     document.getElementById('modalEditBtn').href  = `cadastrarCartas.html?id=${id}`;
     document.getElementById('modalCloneBtn').href = `cadastrarCartas.html?clone=${id}`;
     document.getElementById('modalDlBtn').onclick  = () => baixarCartaModal(id);
@@ -305,10 +181,7 @@ async function exportarPDF() {
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-    // 3 cols × 3 rows = 9 cartas por página
-    const COLS = 3, ROWS = 3;
-    const W = 60, H = 88, ML = 8, MT = 5, GX = 7, GY = 7;
+    const COLS = 3, ROWS = 3, W = 60, H = 88, ML = 8, MT = 5, GX = 7, GY = 7;
 
     const tmp = document.createElement('div');
     tmp.style.cssText = 'position:fixed;left:-9999px;top:0;pointer-events:none;';
@@ -323,7 +196,7 @@ async function exportarPDF() {
             const x = ML + col * (W + GX);
             const y = MT + row * (H + GY);
 
-            tmp.innerHTML = buildYgoCardHTML(filtered[i]);
+            tmp.innerHTML = buildYgoCard(filtered[i]);
             const cardEl = tmp.querySelector('.ygo-card');
 
             btn.textContent = `PDF... ${i + 1}/${filtered.length}`;
@@ -343,10 +216,9 @@ async function exportarPDF() {
 
 // ── Eventos ─────────────────────────────────────────────────────
 
-// Filtros de tipo
-document.querySelectorAll('.filter-btn').forEach(btn => {
+document.querySelectorAll('.filter-btn:not(#favFilterBtn)').forEach(btn => {
     btn.addEventListener('click', function () {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.filter-btn:not(#favFilterBtn)').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         activeFilter = this.dataset.filter;
         activeAttr   = 'TODOS';
@@ -355,7 +227,6 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// Filtros de atributo
 document.querySelectorAll('.attr-btn').forEach(btn => {
     btn.addEventListener('click', function () {
         document.querySelectorAll('.attr-btn').forEach(b => b.classList.remove('active'));
@@ -365,31 +236,25 @@ document.querySelectorAll('.attr-btn').forEach(btn => {
     });
 });
 
-// Ordenação
 document.getElementById('sortSelect').addEventListener('change', function () {
     activeSort = this.value;
     renderCards();
 });
 
-// Busca
 document.getElementById('searchInput').addEventListener('input', renderCards);
 
-// Favoritos
 document.getElementById('favFilterBtn').addEventListener('click', function () {
     activeFavOnly = !activeFavOnly;
     this.classList.toggle('active', activeFavOnly);
     renderCards();
 });
 
-// Modal — fechar ao clicar fora
 document.getElementById('modalOverlay').addEventListener('click', function (e) {
     if (e.target === this) closeModal();
 });
 
-// Modal — botão fechar
 document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
 
-// Modal — tecla Escape
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 loadCards();

@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "server.js",
+      "src": "backend/server.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "index.html",
-          "style.css",
-          "card-styles.css",
-          "pages/**"
+          "frontend/index.html",
+          "frontend/style.css",
+          "frontend/card-styles.css",
+          "frontend/pages/**"
         ]
       }
     }
@@ -17,7 +17,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/server.js"
+      "dest": "/backend/server.js"
     }
   ]
 }

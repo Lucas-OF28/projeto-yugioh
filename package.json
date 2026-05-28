@@ -2,10 +2,10 @@
   "name": "projeto-yugioh",
   "version": "1.0.0",
   "description": "Gerador de cartas Yu-Gi-Oh",
-  "main": "server.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -1,13 +1,12 @@
 const fs   = require('fs');
 const path = require('path');
 
-// Importação no nível superior — obrigatório para o Vercel detectar a dependência
 const mongodb = require('mongodb');
 const { MongoClient } = mongodb;
 
 // ── Adaptador JSON — desenvolvimento local ──────────────
 function createJsonDB() {
-    const DB_FILE = path.join(__dirname, 'yugioh.json');
+    const DB_FILE = path.join(__dirname, '..', 'yugioh.json');
     let state = { nextId: 1, cartas: [] };
 
     if (fs.existsSync(DB_FILE)) {
@@ -17,10 +16,10 @@ function createJsonDB() {
     function save() { fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2)); }
 
     return {
-        async all()         { return [...state.cartas].sort((a, b) => b.id - a.id); },
-        async get(id)       { return state.cartas.find(c => c.id === Number(id)) || null; },
+        async all()          { return [...state.cartas].sort((a, b) => b.id - a.id); },
+        async get(id)        { return state.cartas.find(c => c.id === Number(id)) || null; },
         async insert(fields) {
-            const id = state.nextId++;
+            const id    = state.nextId++;
             const carta = { id, ...fields, criado_em: new Date().toISOString() };
             state.cartas.push(carta);
             save();
@@ -44,7 +43,6 @@ function createJsonDB() {
 }
 
 // ── Adaptador MongoDB — produção (Vercel + Atlas) ───────
-// Usa promise cacheada no global para reutilizar conexão entre warm invocations
 function createMongoDB() {
     if (!global._mongoClientPromise) {
         const client = new MongoClient(process.env.MONGODB_URI, {

@@ -9,49 +9,41 @@ const app    = express();
 const PORT   = process.env.PORT || 3000;
 const isProd = !!process.env.VERCEL;
 
-// ── Proxy reverso do Vercel (necessário para rate-limit correto) ──
 app.set('trust proxy', 1);
 
-// ── Cabeçalhos de segurança ──────────────────────────────
 app.use(helmet({
-    // CSP desabilitado pois carregamos Google Fonts, CDNs de scripts, etc.
-    contentSecurityPolicy: false,
-    // Permite carregar imagens externas (YGOPRODeck, etc.)
+    contentSecurityPolicy:    false,
     crossOriginEmbedderPolicy: false,
 }));
 
-// ── CORS — aceita apenas a origem do próprio projeto ────
 const allowedOrigins = [
     'http://localhost:3000',
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
-    process.env.SITE_URL || null,  // defina no Vercel se tiver domínio próprio
+    process.env.SITE_URL || null,
 ].filter(Boolean);
 
 app.use(cors({
     origin: (origin, cb) => {
-        // Permite sem origin (curl, Postman, apps locais)
-        if (!origin || allowedOrigins.some(o => origin.startsWith(o))) {
+        if (!origin || allowedOrigins.some(o => origin.startsWith(o)))
             return cb(null, true);
-        }
         cb(new Error('CORS: origem não permitida'));
     },
 }));
 
-app.use(express.json({ limit: '6mb' }));  // base64 de até ~4 MB
-app.use(express.static(path.join(__dirname)));
+app.use(express.json({ limit: '6mb' }));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
-// ── Rate limiting na API ────────────────────────────────
 const apiLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,   // janela de 15 minutos
-    max:      100,               // máximo de 100 requisições por IP
+    windowMs: 15 * 60 * 1000,
+    max:      100,
     standardHeaders: true,
     legacyHeaders:   false,
     message: { error: 'Muitas requisições. Aguarde alguns minutos e tente novamente.' },
 });
 
 const writeLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000,   // janela de 10 minutos
-    max:      30,                // máximo de 30 criações/edições/deleções por IP
+    windowMs: 10 * 60 * 1000,
+    max:      30,
     standardHeaders: true,
     legacyHeaders:   false,
     message: { error: 'Limite de operações atingido. Aguarde antes de continuar.' },
@@ -59,7 +51,7 @@ const writeLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// ── Validação de entrada ─────────────────────────────────
+// ── Validação ────────────────────────────────────────────
 const TIPOS       = ['MONSTRO', 'MAGIA', 'ARMADILHA'];
 const SUBTIPOS    = ['Normal', 'Efeito', 'Ritual', 'Fusão', 'Sincro', 'XYZ', 'Pêndulo', 'Link'];
 const ATRIBUTOS   = ['FOGO', 'ÁGUA', 'TERRA', 'VENTO', 'LUZ', 'TREVAS', 'DIVINO'];
@@ -183,22 +175,22 @@ app.post('/api/cartas', writeLimiter, async (req, res) => {
     try {
         const nova = await db.insert({
             nome: nome.trim(), tipo,
-            atributo: atributo || null,
-            nivel: nivel ?? null,
-            tipo_monstro: tipo_monstro?.trim() || null,
-            tipo_efeito: tipo_efeito || null,
-            ataque: ataque != null ? Number(ataque) : null,
-            defesa: defesa != null ? Number(defesa) : null,
-            tipo_magia: tipo_magia || null,
+            atributo:       atributo || null,
+            nivel:          nivel ?? null,
+            tipo_monstro:   tipo_monstro?.trim() || null,
+            tipo_efeito:    tipo_efeito || null,
+            ataque:         ataque  != null ? Number(ataque)  : null,
+            defesa:         defesa  != null ? Number(defesa)  : null,
+            tipo_magia:     tipo_magia     || null,
             tipo_armadilha: tipo_armadilha || null,
-            descricao: descricao?.trim() || null,
-            imagem: imagem || null,
-            materiais: materiais?.trim() || null,
-            escala_esq: escala_esq != null ? Number(escala_esq) : null,
-            escala_dir: escala_dir != null ? Number(escala_dir) : null,
+            descricao:      descricao?.trim()      || null,
+            imagem:         imagem                 || null,
+            materiais:      materiais?.trim()      || null,
+            escala_esq:     escala_esq != null ? Number(escala_esq) : null,
+            escala_dir:     escala_dir != null ? Number(escala_dir) : null,
             efeito_pendulo: efeito_pendulo?.trim() || null,
-            valor_link: valor_link != null ? Number(valor_link) : null,
-            setas_link: setas_link || null,
+            valor_link:     valor_link != null ? Number(valor_link) : null,
+            setas_link:     setas_link || null,
         });
         res.status(201).json(nova);
     } catch (e) {
@@ -224,22 +216,22 @@ app.put('/api/cartas/:id', writeLimiter, async (req, res) => {
     try {
         const atualizada = await db.update(id, {
             nome: nome.trim(), tipo,
-            atributo: atributo || null,
-            nivel: nivel ?? null,
-            tipo_monstro: tipo_monstro?.trim() || null,
-            tipo_efeito: tipo_efeito || null,
-            ataque: ataque != null ? Number(ataque) : null,
-            defesa: defesa != null ? Number(defesa) : null,
-            tipo_magia: tipo_magia || null,
+            atributo:       atributo || null,
+            nivel:          nivel ?? null,
+            tipo_monstro:   tipo_monstro?.trim() || null,
+            tipo_efeito:    tipo_efeito || null,
+            ataque:         ataque  != null ? Number(ataque)  : null,
+            defesa:         defesa  != null ? Number(defesa)  : null,
+            tipo_magia:     tipo_magia     || null,
             tipo_armadilha: tipo_armadilha || null,
-            descricao: descricao?.trim() || null,
-            imagem: imagem || null,
-            materiais: materiais?.trim() || null,
-            escala_esq: escala_esq != null ? Number(escala_esq) : null,
-            escala_dir: escala_dir != null ? Number(escala_dir) : null,
+            descricao:      descricao?.trim()      || null,
+            imagem:         imagem                 || null,
+            materiais:      materiais?.trim()      || null,
+            escala_esq:     escala_esq != null ? Number(escala_esq) : null,
+            escala_dir:     escala_dir != null ? Number(escala_dir) : null,
             efeito_pendulo: efeito_pendulo?.trim() || null,
-            valor_link: valor_link != null ? Number(valor_link) : null,
-            setas_link: setas_link || null,
+            valor_link:     valor_link != null ? Number(valor_link) : null,
+            setas_link:     setas_link || null,
         });
         if (!atualizada) return res.status(404).json({ error: 'Carta não encontrada.' });
         res.json(atualizada);
@@ -263,7 +255,6 @@ app.delete('/api/cartas/:id', writeLimiter, async (req, res) => {
     }
 });
 
-// ── Inicialização local ──────────────────────────────────
 if (require.main === module) {
     app.listen(PORT, () => console.log(`Servidor rodando em http://localhost:${PORT}`));
 }
