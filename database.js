@@ -40,17 +40,26 @@ function createJsonDB() {
 }
 
 // ── Adaptador MongoDB — produção (Vercel + Atlas) ───────
+// Reutiliza a conexão entre invocações serverless quentes (warm)
 function createMongoDB() {
     const { MongoClient } = require('mongodb');
-    const client = new MongoClient(process.env.MONGODB_URI);
-    let _db = null;
+
+    // Cacheado no objeto global para sobreviver ao warm-start
+    if (!global._mongoClient) {
+        global._mongoClient = new MongoClient(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+            connectTimeoutMS:         5000,
+            socketTimeoutMS:          10000,
+        });
+    }
+
+    const client = global._mongoClient;
 
     async function getDB() {
-        if (!_db) {
+        if (!client.topology || !client.topology.isConnected()) {
             await client.connect();
-            _db = client.db('yugioh');
         }
-        return _db;
+        return client.db('yugioh');
     }
 
     async function nextId(database) {
@@ -70,7 +79,7 @@ function createMongoDB() {
 
     return {
         async all() {
-            const db = await getDB();
+            const db   = await getDB();
             const docs = await db.collection('cartas').find({}).sort({ id: -1 }).toArray();
             return docs.map(strip);
         },
@@ -79,14 +88,14 @@ function createMongoDB() {
             return strip(await db.collection('cartas').findOne({ id: Number(id) }));
         },
         async insert(fields) {
-            const db = await getDB();
-            const id  = await nextId(db);
+            const db    = await getDB();
+            const id    = await nextId(db);
             const carta = { id, ...fields, criado_em: new Date().toISOString() };
             await db.collection('cartas').insertOne(carta);
             return strip(carta);
         },
         async update(id, fields) {
-            const db = await getDB();
+            const db  = await getDB();
             const doc = await db.collection('cartas').findOneAndUpdate(
                 { id: Number(id) },
                 { $set: fields },
@@ -95,12 +104,11 @@ function createMongoDB() {
             return strip(doc);
         },
         async delete(id) {
-            const db = await getDB();
+            const db  = await getDB();
             const res = await db.collection('cartas').deleteOne({ id: Number(id) });
             return res.deletedCount > 0;
         }
     };
 }
 
-// Usa MongoDB se a variável de ambiente estiver definida, JSON caso contrário
 module.exports = process.env.MONGODB_URI ? createMongoDB() : createJsonDB();

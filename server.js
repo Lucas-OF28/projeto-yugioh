@@ -62,7 +62,8 @@ app.post('/api/cartas', async (req, res) => {
         });
         res.status(201).json(nova);
     } catch (e) {
-        res.status(500).json({ error: 'Erro ao criar carta.' });
+        console.error('[POST /api/cartas]', e);
+        res.status(500).json({ error: 'Erro ao criar carta.', details: e.message });
     }
 });
 
