@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,13 @@
     <link rel="stylesheet" href="../card-styles.css" />
     <link rel="stylesheet" href="ver.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <title>Cartas Disponíveis - Yu-Gi-Oh!</title>
 </head>
+
 <body>
     <header>
         <div class="header-inner">
@@ -53,11 +56,11 @@
         <div class="attr-filters" id="attrFilters" style="display:none">
             <span class="attr-filters-label">Atributo:</span>
             <button class="attr-btn active" data-attr="TODOS">Todos</button>
-            <button class="attr-btn attr-fogo-btn"   data-attr="FOGO">FOGO</button>
-            <button class="attr-btn attr-agua-btn"   data-attr="ÁGUA">ÁGUA</button>
-            <button class="attr-btn attr-terra-btn"  data-attr="TERRA">TERRA</button>
-            <button class="attr-btn attr-vento-btn"  data-attr="VENTO">VENTO</button>
-            <button class="attr-btn attr-luz-btn"    data-attr="LUZ">LUZ</button>
+            <button class="attr-btn attr-fogo-btn" data-attr="FOGO">FOGO</button>
+            <button class="attr-btn attr-agua-btn" data-attr="ÁGUA">ÁGUA</button>
+            <button class="attr-btn attr-terra-btn" data-attr="TERRA">TERRA</button>
+            <button class="attr-btn attr-vento-btn" data-attr="VENTO">VENTO</button>
+            <button class="attr-btn attr-luz-btn" data-attr="LUZ">LUZ</button>
             <button class="attr-btn attr-trevas-btn" data-attr="TREVAS">TREVAS</button>
             <button class="attr-btn attr-divino-btn" data-attr="DIVINO">DIVINO</button>
         </div>
@@ -66,8 +69,10 @@
         <div class="gallery-toolbar">
             <span class="card-counter" id="cardCounter"></span>
             <div class="toolbar-actions">
-                <button class="btn btn-secondary btn-sm" onclick="exportarJSON()" title="Baixar todas as cartas como arquivo JSON">↓ Exportar JSON</button>
-                <button class="btn btn-secondary btn-sm" id="exportPDFBtn" onclick="exportarPDF()" title="Gerar álbum em PDF">↓ Exportar PDF</button>
+                <button class="btn btn-secondary btn-sm" onclick="exportarJSON()"
+                    title="Baixar todas as cartas como arquivo JSON">↓ Exportar JSON</button>
+                <button class="btn btn-secondary btn-sm" id="exportPDFBtn" onclick="exportarPDF()"
+                    title="Gerar álbum em PDF">↓ Exportar PDF</button>
             </div>
         </div>
 
@@ -78,7 +83,7 @@
     </main>
 
     <footer>
-        <p>Yu-Gi-Oh! Card Generator &mdash; By Jean Ricken &amp; Lucas Fabris</p>
+        <p>Yu-Gi-Oh! Card Generator</p>
     </footer>
 
     <!-- Modal fullscreen -->
@@ -93,7 +98,7 @@
                 <a href="#" class="btn btn-secondary btn-sm" id="modalEditBtn">Editar</a>
                 <a href="#" class="btn btn-secondary btn-sm" id="modalCloneBtn">Clonar</a>
                 <button class="btn btn-secondary btn-sm" id="modalDlBtn">↓ Baixar PNG</button>
-                <button class="btn btn-danger btn-sm"    id="modalDelBtn">Deletar</button>
+                <button class="btn btn-danger btn-sm" id="modalDelBtn">Deletar</button>
             </div>
             <p class="modal-hint">Clique fora ou pressione Esc para fechar</p>
         </div>
@@ -108,7 +113,7 @@
             <p class="delete-popup-desc">Esta ação não pode ser desfeita.</p>
             <div class="delete-popup-actions">
                 <button class="btn btn-secondary" id="deletePopupCancel">Cancelar</button>
-                <button class="btn btn-danger"    id="deletePopupConfirm">Deletar</button>
+                <button class="btn btn-danger" id="deletePopupConfirm">Deletar</button>
             </div>
         </div>
     </div>
@@ -116,4 +121,5 @@
     <script src="card-builder.js"></script>
     <script src="ver.js"></script>
 </body>
+
 </html>

@@ -154,4 +154,3 @@ As cartas são salvas no arquivo `yugioh.json` na raiz do projeto. Ele é criado
 
 ---
 
-*By Jean Ricken & Lucas Fabris*
