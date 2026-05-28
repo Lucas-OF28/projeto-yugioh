@@ -34,6 +34,8 @@ function buildLinkArrowsMini(setasStr) {
         }).join('') + '</div>';
 }
 
+const SHINE_SUBTYPES = new Set(['Fusão', 'Sincro', 'XYZ', 'Link', 'Ritual']);
+
 // opts.clickable    — adiciona data-id/onclick/cursor (visualização em grade)
 // opts.nameFallback — placeholder quando card.nome está vazio (modo prévia)
 function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
@@ -101,8 +103,13 @@ function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
         ? `<span class="card-spell-icon card-spell-icon--${card.tipo === 'MAGIA' ? 'spell' : 'trap'}"></span>`
         : (card.atributo ? `<span class="card-attribute ${attrClass}">${attrLabel}</span>` : '');
 
+    // Brilho holográfico: especial para cartas do Deck Extra + Ritual
+    const isSpecial = isMonstro && SHINE_SUBTYPES.has(subtipo);
+    const shineClass = `card-shine${isSpecial ? ' card-shine--special' : ''}`;
+
     return `
     <div class="ygo-card ${cardClass}"${rootAttrs}>
+      <div class="${shineClass}"></div>
       <div class="card-inner">
         <div class="card-name-bar">
             <span class="card-name">${esc(card.nome || nameFallback)}</span>

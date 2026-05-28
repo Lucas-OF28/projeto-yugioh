@@ -461,3 +461,65 @@
     color: #ff7800;
     text-shadow: 0 0 4px rgba(255,120,0,0.75);
 }
+
+/* ══════════════════════════════════════════════════════
+   Brilho holográfico
+   ══════════════════════════════════════════════════════ */
+
+.card-shine {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    background: linear-gradient(
+        115deg,
+        transparent          0%,
+        transparent         18%,
+        rgba(255, 60, 60,  .50) 22%,
+        rgba(255,200, 50,  .50) 27%,
+        rgba( 60,230,100,  .50) 32%,
+        rgba( 50,160,255,  .50) 37%,
+        rgba(200, 50,255,  .50) 42%,
+        rgba(255, 80,200,  .40) 47%,
+        transparent         51%,
+        transparent        100%
+    );
+    background-size: 400% 400%;
+    mix-blend-mode: screen;
+    transition: opacity 0.35s ease, background-position 0.05s linear;
+    will-change: opacity, background-position;
+}
+
+/* Animação idle para cartas especiais (Deck Extra + Ritual) */
+@keyframes holo-idle {
+    0%   { background-position:   0%  50%; opacity: 0.09; }
+    25%  { background-position: 100%   0%; opacity: 0.22; }
+    50%  { background-position: 100% 100%; opacity: 0.11; }
+    75%  { background-position:   0% 100%; opacity: 0.24; }
+    100% { background-position:   0%  50%; opacity: 0.09; }
+}
+
+.card-shine--special {
+    animation: holo-idle 5s ease-in-out infinite;
+}
+
+/* Quando o JS assume controle (tilt ativo) */
+.card-shine--tracking {
+    animation: none !important;
+    transition: opacity 0.08s linear, background-position 0s linear;
+}
+
+/* Hover na galeria: leve elevação */
+.card-wrapper .ygo-card {
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-wrapper .ygo-card:hover {
+    transform: translateY(-7px);
+    box-shadow:
+        0 0 0 3px rgba(0,0,0,0.9),
+        0 0 0 5px rgba(200,160,50,0.65),
+        0 0 0 6px rgba(0,0,0,0.6),
+        0 22px 55px rgba(0,0,0,0.9);
+}

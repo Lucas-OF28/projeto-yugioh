@@ -220,13 +220,19 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    cursor: grab;
 }
+
+.modal-card-scale-wrapper:active { cursor: grabbing; }
 
 .modal-card-scale-wrapper .ygo-card {
     transform: scale(1.5);
     flex-shrink: 0;
-    pointer-events: none; /* evita re-abrir o modal ao clicar */
+    pointer-events: none;
     cursor: default;
+    transform-style: preserve-3d;
+    transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+    will-change: transform;
 }
 
 .modal-action-buttons {

@@ -258,3 +258,61 @@ document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 loadCards();
+
+// ── Efeito 3D tilt + brilho no modal ───────────────────
+(function initModalTilt() {
+    const wrapper = document.querySelector('.modal-card-scale-wrapper');
+
+    function getCard() { return wrapper.querySelector('.ygo-card'); }
+
+    function applyTilt(clientX, clientY) {
+        const card = getCard();
+        if (!card) return;
+
+        const rect = wrapper.getBoundingClientRect();
+        const dx = Math.max(-1, Math.min(1, (clientX - (rect.left + rect.width  / 2)) / (rect.width  / 2)));
+        const dy = Math.max(-1, Math.min(1, (clientY - (rect.top  + rect.height / 2)) / (rect.height / 2)));
+
+        const rotY =  dx * 22;
+        const rotX = -dy * 16;
+
+        card.style.transition = 'none';
+        card.style.transform  = `scale(1.5) perspective(600px) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+
+        const shine = card.querySelector('.card-shine');
+        if (shine) {
+            const px = ((dx + 1) / 2) * 100;
+            const py = ((dy + 1) / 2) * 100;
+            const intensity = 0.25 + Math.abs(dx) * 0.45 + Math.abs(dy) * 0.30;
+            shine.classList.add('card-shine--tracking');
+            shine.style.backgroundPosition = `${px}% ${py}%`;
+            shine.style.opacity = Math.min(intensity, 0.85).toFixed(2);
+        }
+    }
+
+    function resetTilt() {
+        const card = getCard();
+        if (!card) return;
+
+        card.style.transition = 'transform 0.65s cubic-bezier(0.23, 1, 0.32, 1)';
+        card.style.transform  = 'scale(1.5)';
+
+        const shine = card.querySelector('.card-shine');
+        if (shine) {
+            shine.classList.remove('card-shine--tracking');
+            shine.style.opacity = '';
+            shine.style.backgroundPosition = '';
+        }
+    }
+
+    wrapper.addEventListener('mousemove',  e => applyTilt(e.clientX, e.clientY));
+    wrapper.addEventListener('mouseleave', resetTilt);
+
+    wrapper.addEventListener('touchmove', e => {
+        e.preventDefault();
+        applyTilt(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend',   resetTilt);
+    wrapper.addEventListener('touchcancel', resetTilt);
+})();
