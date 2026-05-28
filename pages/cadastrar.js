@@ -59,7 +59,8 @@ const TRAP_RACE_MAP = { Normal:'', Continuous:'Contínua', Counter:'Contador' };
 
 // ── Estado ────────────────────────────────────────────────
 
-const editId = new URLSearchParams(window.location.search).get('id');
+const editId  = new URLSearchParams(window.location.search).get('id');
+const cloneId = new URLSearchParams(window.location.search).get('clone');
 let nivelAtual = 4;
 let lastSearchResults = [];
 
@@ -304,6 +305,17 @@ async function init() {
             preencherFormulario(await res.json());
         } catch {
             showMsg('Erro ao carregar carta para edição.', 'error');
+        }
+    } else if (cloneId) {
+        document.getElementById('pageTitle').textContent = 'Clonar Carta';
+        try {
+            const res = await fetch(`${API}/${cloneId}`);
+            if (!res.ok) throw new Error();
+            const carta = await res.json();
+            carta.nome = carta.nome + ' (Cópia)';
+            preencherFormulario(carta);
+        } catch {
+            showMsg('Erro ao carregar carta para clonar.', 'error');
         }
     }
 }

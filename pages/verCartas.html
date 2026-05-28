@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
     <title>Cartas Disponíveis - Yu-Gi-Oh!</title>
 </head>
 <body>
@@ -26,18 +27,51 @@
             <a href="cadastrarCartas.html" class="btn btn-secondary btn-sm">+ Nova Carta</a>
         </div>
 
+        <!-- Filtros principais + Ordenação -->
         <div class="filters-bar">
-            <div class="search-wrap">
-                <input type="text" id="searchInput" placeholder="Buscar carta pelo nome..." class="search-input" />
-            </div>
+            <input type="text" id="searchInput" placeholder="Buscar pelo nome..." class="search-input" />
             <div class="filter-buttons">
                 <button class="filter-btn active" data-filter="TODOS">Todos</button>
                 <button class="filter-btn" data-filter="MONSTRO">Monstros</button>
                 <button class="filter-btn" data-filter="MAGIA">Magias</button>
                 <button class="filter-btn" data-filter="ARMADILHA">Armadilhas</button>
+                <button class="filter-btn" id="favFilterBtn">★ Favoritos</button>
+            </div>
+            <select id="sortSelect" class="sort-select" title="Ordenar por">
+                <option value="recente">↓ Mais recente</option>
+                <option value="antigo">↑ Mais antigo</option>
+                <option value="nome-az">Nome A → Z</option>
+                <option value="nome-za">Nome Z → A</option>
+                <option value="nivel-desc">Nível ↓</option>
+                <option value="nivel-asc">Nível ↑</option>
+                <option value="atk-desc">ATK ↓</option>
+                <option value="atk-asc">ATK ↑</option>
+            </select>
+        </div>
+
+        <!-- Filtro de atributo (visível só para Monstros) -->
+        <div class="attr-filters" id="attrFilters" style="display:none">
+            <span class="attr-filters-label">Atributo:</span>
+            <button class="attr-btn active" data-attr="TODOS">Todos</button>
+            <button class="attr-btn attr-fogo-btn"   data-attr="FOGO">FOGO</button>
+            <button class="attr-btn attr-agua-btn"   data-attr="ÁGUA">ÁGUA</button>
+            <button class="attr-btn attr-terra-btn"  data-attr="TERRA">TERRA</button>
+            <button class="attr-btn attr-vento-btn"  data-attr="VENTO">VENTO</button>
+            <button class="attr-btn attr-luz-btn"    data-attr="LUZ">LUZ</button>
+            <button class="attr-btn attr-trevas-btn" data-attr="TREVAS">TREVAS</button>
+            <button class="attr-btn attr-divino-btn" data-attr="DIVINO">DIVINO</button>
+        </div>
+
+        <!-- Contador + Exportações -->
+        <div class="gallery-toolbar">
+            <span class="card-counter" id="cardCounter"></span>
+            <div class="toolbar-actions">
+                <button class="btn btn-secondary btn-sm" onclick="exportarJSON()" title="Baixar todas as cartas como arquivo JSON">↓ Exportar JSON</button>
+                <button class="btn btn-secondary btn-sm" id="exportPDFBtn" onclick="exportarPDF()" title="Gerar álbum em PDF">↓ Exportar PDF</button>
             </div>
         </div>
 
+        <!-- Grade de cartas -->
         <div class="cards-grid" id="cardsGrid">
             <div class="loading">Carregando cartas...</div>
         </div>
@@ -46,6 +80,24 @@
     <footer>
         <p>Yu-Gi-Oh! Card Generator &mdash; By Jean Ricken &amp; Lucas Fabris</p>
     </footer>
+
+    <!-- Modal fullscreen -->
+    <div class="modal-overlay" id="modalOverlay">
+        <button class="modal-close-btn" id="modalCloseBtn" title="Fechar (Esc)">✕</button>
+        <div class="modal-content">
+            <div class="modal-card-scale-wrapper">
+                <div id="modalCardContainer"></div>
+            </div>
+            <div class="modal-action-buttons">
+                <button class="btn btn-secondary btn-sm" id="modalFavBtn">☆ Favorito</button>
+                <a href="#" class="btn btn-secondary btn-sm" id="modalEditBtn">Editar</a>
+                <a href="#" class="btn btn-secondary btn-sm" id="modalCloneBtn">Clonar</a>
+                <button class="btn btn-secondary btn-sm" id="modalDlBtn">↓ Baixar PNG</button>
+                <button class="btn btn-danger btn-sm"    id="modalDelBtn">Deletar</button>
+            </div>
+            <p class="modal-hint">Clique fora ou pressione Esc para fechar</p>
+        </div>
+    </div>
 
     <script src="ver.js"></script>
 </body>
