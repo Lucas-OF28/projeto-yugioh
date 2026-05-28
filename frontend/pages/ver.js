@@ -112,28 +112,53 @@ function closeModal() {
     document.body.style.overflow = '';
 }
 
+// ── Helper: renderiza carta fora da tela (sem wrapper/hover/shine) ──
+async function renderCartaOffscreen(carta, scale = 3) {
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:0;pointer-events:none;';
+    tmp.innerHTML = buildYgoCard(carta);
+
+    // Oculta o shine: mix-blend-mode:screen corrompre o output do html2canvas
+    const shine = tmp.querySelector('.card-shine');
+    if (shine) shine.style.display = 'none';
+
+    document.body.appendChild(tmp);
+    try {
+        const cardEl = tmp.querySelector('.ygo-card');
+        return await html2canvas(cardEl, {
+            scale, useCORS: true, allowTaint: false, logging: false, backgroundColor: null,
+        });
+    } finally {
+        document.body.removeChild(tmp);
+    }
+}
+
+function nomeArquivo(carta) {
+    return (carta?.nome || 'carta').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+}
+
 async function baixarCartaModal(id) {
-    const cardEl = document.querySelector('#modalCardContainer .ygo-card');
-    if (!cardEl) return;
     const carta = allCards.find(c => c.id === id);
-    const nome = (carta?.nome || 'carta').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_');
-    const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, logging: false, backgroundColor: null });
-    const a = document.createElement('a');
-    a.download = `${nome}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
+    if (!carta) return;
+    try {
+        const canvas = await renderCartaOffscreen(carta, 3);
+        const a = document.createElement('a');
+        a.download = `${nomeArquivo(carta)}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+    } catch {
+        alert('Não foi possível baixar.');
+    }
 }
 
 // ── Download individual ─────────────────────────────────────────
 async function baixarCarta(id) {
-    const cardEl = document.querySelector(`.ygo-card[data-id="${id}"]`);
-    if (!cardEl) return;
     const carta = allCards.find(c => c.id === id);
-    const nome = (carta?.nome || 'carta').replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_');
+    if (!carta) return;
     try {
-        const canvas = await html2canvas(cardEl, { scale: 3, useCORS: true, allowTaint: false, logging: false, backgroundColor: null });
+        const canvas = await renderCartaOffscreen(carta, 3);
         const a = document.createElement('a');
-        a.download = `${nome}.png`;
+        a.download = `${nomeArquivo(carta)}.png`;
         a.href = canvas.toDataURL('image/png');
         a.click();
     } catch {
@@ -230,6 +255,8 @@ async function exportarPDF() {
             const y = MT + row * (H + GY);
 
             tmp.innerHTML = buildYgoCard(filtered[i]);
+            const shine = tmp.querySelector('.card-shine');
+            if (shine) shine.style.display = 'none';
             const cardEl = tmp.querySelector('.ygo-card');
 
             btn.textContent = `PDF... ${i + 1}/${filtered.length}`;
