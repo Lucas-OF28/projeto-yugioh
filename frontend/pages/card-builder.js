@@ -63,9 +63,9 @@ function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
         const t = card.tipo_monstro || 'Monstro';
         typeText = `[${t}${subtipo && subtipo !== 'Normal' ? '/' + subtipo : ''}]`;
     } else if (card.tipo === 'MAGIA') {
-        typeText = `Carta de Magia${card.tipo_magia ? ' – ' + card.tipo_magia : ''}`;
+        typeText = `[Carta de Magia${card.tipo_magia ? ' – ' + card.tipo_magia : ''}]`;
     } else {
-        typeText = `Carta de Armadilha${card.tipo_armadilha ? ' – ' + card.tipo_armadilha : ''}`;
+        typeText = `[Carta de Armadilha${card.tipo_armadilha ? ' – ' + card.tipo_armadilha : ''}]`;
     }
 
     const materiaisHTML = isMonstro && ['Fusão','Sincro','XYZ'].includes(subtipo) && card.materiais
@@ -93,17 +93,26 @@ function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
         ? ` data-id="${card.id}" onclick="openModal(${card.id})" style="cursor:pointer"`
         : '';
 
+    // Monstro: tipo abaixo da imagem | Magia/Armadilha: tipo acima da imagem
+    const typeHTML = `<div class="card-type-text${isMonstro ? '' : ' card-type-header'}">${typeText}</div>`;
+
+    // Ícone de magia/armadilha no lugar do atributo
+    const iconHtml = !isMonstro
+        ? `<span class="card-spell-icon card-spell-icon--${card.tipo === 'MAGIA' ? 'spell' : 'trap'}"></span>`
+        : (card.atributo ? `<span class="card-attribute ${attrClass}">${attrLabel}</span>` : '');
+
     return `
     <div class="ygo-card ${cardClass}"${rootAttrs}>
       <div class="card-inner">
         <div class="card-name-bar">
             <span class="card-name">${esc(card.nome || nameFallback)}</span>
-            ${card.atributo ? `<span class="card-attribute ${attrClass}">${attrLabel}</span>` : ''}
+            ${iconHtml}
         </div>
         ${starsHTML}
+        ${!isMonstro ? typeHTML : ''}
         <div class="card-image-area">${imageContent}</div>
         ${materiaisHTML}
-        <div class="card-type-text">${typeText}</div>
+        ${isMonstro ? typeHTML : ''}
         ${pendulumHTML}
         <div class="${descClass}">
             <p class="card-description" style="${descStyle}">${esc(card.descricao || '')}</p>

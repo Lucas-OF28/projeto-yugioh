@@ -31,7 +31,11 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '6mb' }));
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+// Estáticos apenas no dev local — no Vercel o CDN serve frontend/
+if (!process.env.VERCEL) {
+    app.use(express.static(path.join(__dirname, '..', 'frontend')));
+}
 
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
