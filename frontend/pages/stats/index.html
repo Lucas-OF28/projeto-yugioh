@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../shared/global.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap"
+        rel="stylesheet">
+    <title>Estatísticas - Yu-Gi-Oh!</title>
+    <style>
+        .stats-main { max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+        .kpi-row {
+            display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;
+        }
+        .kpi-card {
+            flex: 1; min-width: 130px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(212,160,23,0.25);
+            border-radius: 10px; padding: 1rem 1.25rem;
+            text-align: center;
+        }
+        .kpi-value {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem; color: var(--gold); line-height: 1;
+        }
+        .kpi-label {
+            font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.45); margin-top: 4px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .chart-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 1.25rem;
+        }
+        .chart-title {
+            font-family: 'Cinzel', serif; color: var(--gold);
+            font-size: 0.95rem; margin-bottom: 1rem; text-align: center;
+        }
+        .chart-box canvas { max-height: 260px; }
+
+        .top-card-entry {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+            font-size: 0.85rem;
+        }
+        .top-card-entry:last-child { border-bottom: none; }
+        .top-card-name { color: var(--text); }
+        .top-card-val  { color: var(--gold); font-weight: bold; font-family: monospace; }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <h1 class="logo-text">Yu-Gi-Oh!</h1>
+            <p class="header-sub">Card Generator</p>
+        </div>
+    </header>
+
+    <main>
+        <div class="page-header">
+            <a href="/pages/gallery/" class="btn-back">← Minhas Cartas</a>
+            <h2>Estatísticas da Coleção</h2>
+            <div style="width:80px"></div>
+        </div>
+
+        <div class="stats-main" id="statsMain">
+            <div style="text-align:center;color:rgba(255,255,255,.4);padding:4rem">Carregando...</div>
+        </div>
+    </main>
+
+    <footer><p>Yu-Gi-Oh! Card Generator</p></footer>
+
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/sidebar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -388,3 +388,63 @@
 }
 
 .delete-popup-actions .btn { min-width: 110px; }
+
+/* ── Seleção múltipla ── */
+.card-checkbox {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 20;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.7);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.card-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--gold);
+    cursor: pointer;
+}
+
+.card-selected .ygo-card {
+    outline: 3px solid var(--gold);
+    outline-offset: 2px;
+}
+
+.batch-bar {
+    max-width: 1300px;
+    margin: 0 auto 1.25rem;
+    padding: 0.75rem 2rem;
+    background: rgba(212,160,23,0.12);
+    border: 1px solid rgba(212,160,23,0.3);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.batch-count {
+    color: var(--gold);
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.batch-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#selectModeBtn.active {
+    background: rgba(212,160,23,0.2);
+    border-color: var(--gold);
+    color: var(--gold);
+}

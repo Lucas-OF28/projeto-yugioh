@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../shared/global.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap"
+        rel="stylesheet">
+    <title>Decks - Yu-Gi-Oh!</title>
+</head>
+
+<body>
+    <header>
+        <div class="header-inner">
+            <h1 class="logo-text">Yu-Gi-Oh!</h1>
+            <p class="header-sub">Card Generator</p>
+        </div>
+    </header>
+
+    <main id="appMain">
+        <!-- Conteúdo injetado por decks.js -->
+        <div style="text-align:center;color:rgba(255,255,255,.4);padding:4rem">Carregando...</div>
+    </main>
+
+    <footer><p>Yu-Gi-Oh! Card Generator</p></footer>
+
+    <!-- Popup de confirmação de exclusão de deck -->
+    <div class="delete-popup-overlay" id="deleteDeckPopup">
+        <div class="delete-popup">
+            <div class="delete-popup-icon">⚠</div>
+            <h3 class="delete-popup-title">Deletar este deck?</h3>
+            <p class="delete-popup-card-name" id="deleteDeckName"></p>
+            <p class="delete-popup-desc">Esta ação não pode ser desfeita.</p>
+            <div class="delete-popup-actions">
+                <button class="btn btn-secondary" id="deleteDeckCancel">Cancelar</button>
+                <button class="btn btn-danger"    id="deleteDeckConfirm">Deletar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/sidebar.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

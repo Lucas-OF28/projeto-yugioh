@@ -487,3 +487,265 @@ footer {
     font-size: 0.75rem;
     color: rgba(255,255,255,0.4);
 }
+
+/* ── Sidebar layout ─────────────────────────────────── */
+body.has-sidebar {
+    display: flex;
+}
+
+.sidebar {
+    width: 230px;
+    min-height: 100vh;
+    background: #09091a;
+    border-right: 1px solid rgba(212,160,23,0.18);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    transition: transform 0.28s ease;
+}
+
+.sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid rgba(212,160,23,0.15);
+}
+
+.sidebar-logo-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px rgba(212,160,23,0.4);
+    line-height: 1;
+}
+
+.sidebar-logo-sub {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-top: 2px;
+}
+
+.sidebar-section-label {
+    font-size: 0.62rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.22);
+    padding: 1rem 1.25rem 0.35rem;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0.5rem 0.5rem;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.18s;
+    margin-bottom: 2px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+}
+
+.nav-item:hover {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.88);
+}
+
+.nav-item.active {
+    background: rgba(212,160,23,0.14);
+    color: var(--gold);
+    font-weight: 600;
+}
+
+.nav-item.active .nav-icon {
+    filter: drop-shadow(0 0 6px rgba(212,160,23,0.5));
+}
+
+.nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+.sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.2);
+}
+
+.main-wrapper {
+    margin-left: 230px;
+    flex: 1;
+    min-width: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top bar */
+.top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(9,9,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(212,160,23,0.15);
+    padding: 0.85rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.top-bar-title {
+    font-family: 'Cinzel', serif;
+    color: var(--gold);
+    font-size: 1rem;
+    flex: 1;
+}
+
+.sidebar-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.user-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.user-avatar-pill {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: #1a1a2e;
+    font-weight: 900;
+    font-size: 0.8rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-pill-name {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+}
+
+/* Mobile sidebar */
+@media (max-width: 880px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.sidebar--open {
+        transform: translateX(0);
+        box-shadow: 4px 0 30px rgba(0,0,0,0.8);
+    }
+    .main-wrapper {
+        margin-left: 0;
+    }
+    .sidebar-toggle {
+        display: block;
+    }
+    .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 190;
+    }
+    .sidebar-backdrop.active {
+        display: block;
+    }
+}
+
+/* ── Popup de confirmação (compartilhado entre galeria e decks) ── */
+@keyframes popup-in {
+    from { opacity: 0; transform: scale(0.88) translateY(-12px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+.delete-popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.delete-popup-overlay.active { display: flex; }
+
+.delete-popup {
+    background: linear-gradient(160deg, #14142a 0%, #1c1030 100%);
+    border: 1px solid rgba(231,76,60,0.35);
+    border-radius: 14px;
+    padding: 2rem 2rem 1.5rem;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 0 1px rgba(231,76,60,0.12), 0 24px 70px rgba(0,0,0,0.85);
+    animation: popup-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.delete-popup-icon {
+    font-size: 2.2rem;
+    color: #e74c3c;
+    margin-bottom: 0.75rem;
+    filter: drop-shadow(0 0 8px rgba(231,76,60,0.5));
+}
+
+.delete-popup-title {
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+}
+
+.delete-popup-card-name {
+    color: var(--gold);
+    font-size: 1rem;
+    font-style: italic;
+    font-family: 'Cinzel', Georgia, serif;
+    margin: 0 0 0.5rem;
+    padding: 0.3rem 0.75rem;
+    background: rgba(212,160,23,0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(212,160,23,0.2);
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.delete-popup-desc {
+    color: rgba(255,255,255,0.42);
+    font-size: 0.82rem;
+    margin: 0 0 1.6rem;
+}
+
+.delete-popup-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.delete-popup-actions .btn { min-width: 110px; }

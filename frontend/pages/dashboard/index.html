@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Yu-Gi-Oh! Card Generator</title>
+    <link rel="stylesheet" href="../../shared/global.css" />
+    <link rel="stylesheet" href="../../components/card-styles.css" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Conteúdo principal — sidebar é injetada por sidebar.js -->
+    <main>
+        <div class="dash-content">
+
+            <!-- Boas-vindas + ações rápidas -->
+            <section class="dash-welcome">
+                <div class="welcome-text">
+                    <h2>Bem-vindo de volta, <span class="username-highlight" id="welcomeName">Duelista</span>!</h2>
+                    <p>Gerencie suas cartas, crie decks incríveis e domine o duelo!</p>
+                </div>
+                <div class="action-cards">
+                    <a href="/pages/card-form/" class="action-card action-card--purple">
+                        <span class="action-icon">✏️</span>
+                        <div>
+                            <div class="action-label">Criar</div>
+                            <div class="action-name">Nova Carta</div>
+                            <div class="action-desc">Comece uma nova carta →</div>
+                        </div>
+                    </a>
+                    <a href="/pages/decks/?id=novo" class="action-card action-card--blue">
+                        <span class="action-icon">📁</span>
+                        <div>
+                            <div class="action-label">Criar</div>
+                            <div class="action-name">Novo Deck</div>
+                            <div class="action-desc">Monte seu deck →</div>
+                        </div>
+                    </a>
+                    <a href="/pages/gallery/" class="action-card action-card--gold">
+                        <span class="action-icon">🃏</span>
+                        <div>
+                            <div class="action-label">Ver Coleção</div>
+                            <div class="action-name">Explore suas cartas</div>
+                            <div class="action-desc">→</div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Estatísticas gerais -->
+            <div class="section-title">Estatísticas Gerais</div>
+            <div class="stats-row" id="statsRow">
+                <div class="stat-box"><div class="stat-box-icon">🃏</div><div class="stat-box-val" id="sTotal">–</div><div class="stat-box-label">Cartas Totais</div><div class="stat-box-sub" id="sTotalSub">–</div></div>
+                <div class="stat-box stat-box--monstro"><div class="stat-box-icon">👹</div><div class="stat-box-val" id="sMonstros">–</div><div class="stat-box-label">Monstros</div><div class="stat-box-sub" id="sMonstrosSub">–</div></div>
+                <div class="stat-box stat-box--magia"><div class="stat-box-icon">✨</div><div class="stat-box-val" id="sMagias">–</div><div class="stat-box-label">Magias</div><div class="stat-box-sub" id="sMagiasSub">–</div></div>
+                <div class="stat-box stat-box--armadilha"><div class="stat-box-icon">⚡</div><div class="stat-box-val" id="sArmadilhas">–</div><div class="stat-box-label">Armadilhas</div><div class="stat-box-sub" id="sArmadilhasSub">–</div></div>
+                <div class="stat-box stat-box--decks"><div class="stat-box-icon">📁</div><div class="stat-box-val" id="sDecks">–</div><div class="stat-box-label">Decks Criados</div><div class="stat-box-sub" id="sDecksSub">–</div></div>
+            </div>
+
+            <!-- Últimas cartas + Meus Decks -->
+            <div class="dash-two-col">
+                <section class="dash-panel">
+                    <div class="panel-header">
+                        <span class="panel-header-title">🃏 Últimas Cartas</span>
+                        <a href="/pages/gallery/" class="panel-see-all">Ver todas →</a>
+                    </div>
+                    <div class="recent-cards-grid" id="recentCards">
+                        <div class="empty-panel">Carregando...</div>
+                    </div>
+                </section>
+
+                <section class="dash-panel">
+                    <div class="panel-header">
+                        <span class="panel-header-title">📁 Meus Decks</span>
+                        <a href="/pages/decks/" class="panel-see-all">Ver todos →</a>
+                    </div>
+                    <div class="deck-mini-grid" id="recentDecks">
+                        <div class="empty-panel" style="grid-column:1/-1">Carregando...</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Atividade recente + Estatísticas rápidas -->
+            <div class="dash-two-col">
+                <section class="dash-panel">
+                    <div class="panel-header">
+                        <span class="panel-header-title">🕐 Atividade Recente</span>
+                    </div>
+                    <div class="activity-list" id="recentActivity">
+                        <div class="empty-panel">Carregando...</div>
+                    </div>
+                </section>
+
+                <section class="dash-panel">
+                    <div class="panel-header">
+                        <span class="panel-header-title">⚡ Estatísticas Rápidas</span>
+                    </div>
+                    <div class="quick-stat-grid" id="quickStats">
+                        <div class="empty-panel" style="grid-column:1/-1">Carregando...</div>
+                    </div>
+                </section>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FAB -->
+    <div class="fab" id="fab">
+        <div class="fab-menu" id="fabMenu">
+            <a href="/pages/card-form/">✏️ Nova Carta</a>
+            <a href="/pages/decks/?id=novo">📁 Novo Deck</a>
+            <a href="/pages/gallery/">🃏 Ver Cartas</a>
+            <a href="/pages/stats/">📊 Estatísticas</a>
+        </div>
+        <button class="fab-main" id="fabBtn" onclick="toggleFab()" title="Ações rápidas">+</button>
+    </div>
+
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/sidebar.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

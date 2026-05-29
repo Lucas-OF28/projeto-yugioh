@@ -36,6 +36,13 @@ function buildLinkArrowsMini(setasStr) {
 
 const SHINE_SUBTYPES = new Set(['Fusão', 'Sincro', 'XYZ', 'Link', 'Ritual']);
 
+const RARITY_CLASS = {
+    'Rara':       'rarity-rara',
+    'Super Rara': 'rarity-super-rara',
+    'Holografica': 'rarity-holografica',
+};
+const RARITY_LABEL = { 'Rara': 'R', 'Super Rara': 'SR', 'Holografica': 'H' };
+
 // opts.clickable    — adiciona data-id/onclick/cursor (visualização em grade)
 // opts.nameFallback — placeholder quando card.nome está vazio (modo prévia)
 function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
@@ -107,9 +114,15 @@ function buildYgoCard(card, { clickable = false, nameFallback = '' } = {}) {
     const isSpecial = isMonstro && SHINE_SUBTYPES.has(subtipo);
     const shineClass = `card-shine${isSpecial ? ' card-shine--special' : ''}`;
 
+    const rarityClass = RARITY_CLASS[card.raridade] || '';
+    const rarityBadge = RARITY_LABEL[card.raridade]
+        ? `<div class="rarity-badge rarity-badge--${rarityClass.replace('rarity-', '')}" title="${card.raridade}">${RARITY_LABEL[card.raridade]}</div>`
+        : '';
+
     return `
-    <div class="ygo-card ${cardClass}"${rootAttrs}>
+    <div class="ygo-card ${cardClass}${rarityClass ? ' ' + rarityClass : ''}"${rootAttrs}>
       <div class="${shineClass}"></div>
+      ${rarityBadge}
       <div class="card-inner">
         <div class="card-name-bar">
             <span class="card-name">${esc(card.nome || nameFallback)}</span>

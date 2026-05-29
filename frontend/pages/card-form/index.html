@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../style.css" />
-    <link rel="stylesheet" href="../card-styles.css" />
-    <link rel="stylesheet" href="cadastro.css" />
+    <link rel="stylesheet" href="../../shared/global.css" />
+    <link rel="stylesheet" href="../../components/card-styles.css" />
+    <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap"
         rel="stylesheet">
@@ -24,7 +24,7 @@
 
     <main>
         <div class="page-header">
-            <a href="verCartas.html" class="btn-back">← Cartas</a>
+            <a href="/pages/gallery/" class="btn-back">← Cartas</a>
             <h2 id="pageTitle">Nova Carta</h2>
             <div style="width:80px"></div>
         </div>
@@ -224,6 +224,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="raridade">Raridade</label>
+                        <select id="raridade">
+                            <option value="">Comum</option>
+                            <option value="Rara">Rara</option>
+                            <option value="Super Rara">Super Rara</option>
+                            <option value="Holografica">Holográfica</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
                         <label>Imagem <span class="label-optional">(opcional)</span></label>
                         <div class="image-input-group">
                             <input type="text" id="imagem" placeholder="Cole uma URL... https://" />
@@ -241,9 +251,18 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary" id="submitBtn">Cadastrar Carta</button>
-                        <a href="verCartas.html" class="btn btn-secondary">Cancelar</a>
+                        <a href="/pages/gallery/" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
+
+                <!-- Painel de histórico (visível só no modo edição) -->
+                <div id="historicoPanel" style="display:none; margin-top:1.5rem;">
+                    <button class="btn btn-secondary btn-sm" id="historicoToggleBtn"
+                        onclick="toggleHistorico()" style="width:100%">
+                        📋 Ver histórico de versões
+                    </button>
+                    <div id="historicoList" style="display:none; margin-top:0.75rem;"></div>
+                </div>
             </div>
 
             <!-- ══ Prévia ══ -->
@@ -262,9 +281,10 @@
         <p>Yu-Gi-Oh! Card Generator</p>
     </footer>
 
-    <script src="auth.js"></script>
-    <script src="card-builder.js"></script>
-    <script src="cadastrar.js"></script>
+    <script src="../../shared/auth.js"></script>
+    <script src="../../shared/sidebar.js"></script>
+    <script src="../../components/card-builder.js"></script>
+    <script src="script.js"></script>
 </body>
 
 </html>

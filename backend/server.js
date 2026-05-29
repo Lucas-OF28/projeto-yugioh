@@ -71,6 +71,7 @@ const ATRIBUTOS   = ['FOGO', 'ÁGUA', 'TERRA', 'VENTO', 'LUZ', 'TREVAS', 'DIVINO
 const TIPOS_MAGIA = ['', 'Contínua', 'Equipamento', 'Campo', 'Jogo-Rápido', 'Ritual'];
 const TIPOS_TRAP  = ['', 'Contínua', 'Contador'];
 const SETAS_VALIDAS = new Set(['N','NE','E','SE','S','SW','W','NW']);
+const RARIDADES   = [null, '', 'Comum', 'Rara', 'Super Rara', 'Holografica'];
 
 function validateCarta(body) {
     const erros = [];
@@ -142,6 +143,9 @@ function validateCarta(body) {
         if (isBase64 && body.imagem.length > 5.5 * 1024 * 1024)
             erros.push('Imagem muito grande (máximo ~4 MB).');
     }
+
+    if (body.raridade !== undefined && body.raridade !== null && !RARIDADES.includes(body.raridade))
+        erros.push('Raridade inválida.');
 
     return erros;
 }
@@ -268,7 +272,7 @@ app.post('/api/cartas', requireAuth, writeLimiter, async (req, res) => {
     const {
         nome, tipo, atributo, nivel, tipo_monstro, tipo_efeito,
         ataque, defesa, tipo_magia, tipo_armadilha, descricao, imagem,
-        materiais, escala_esq, escala_dir, efeito_pendulo, valor_link, setas_link
+        materiais, escala_esq, escala_dir, efeito_pendulo, valor_link, setas_link, raridade
     } = req.body;
 
     try {
@@ -290,6 +294,7 @@ app.post('/api/cartas', requireAuth, writeLimiter, async (req, res) => {
             efeito_pendulo: efeito_pendulo?.trim() || null,
             valor_link:     valor_link != null ? Number(valor_link) : null,
             setas_link:     setas_link || null,
+            raridade:       raridade   || null,
         });
         res.status(201).json(nova);
     } catch (e) {
@@ -309,10 +314,14 @@ app.put('/api/cartas/:id', requireAuth, writeLimiter, async (req, res) => {
     const {
         nome, tipo, atributo, nivel, tipo_monstro, tipo_efeito,
         ataque, defesa, tipo_magia, tipo_armadilha, descricao, imagem,
-        materiais, escala_esq, escala_dir, efeito_pendulo, valor_link, setas_link
+        materiais, escala_esq, escala_dir, efeito_pendulo, valor_link, setas_link, raridade
     } = req.body;
 
     try {
+        // Salva snapshot antes de atualizar
+        const atual = await db.get(id, req.user.username);
+        if (atual) await db.addHistorico(id, req.user.username, atual);
+
         const atualizada = await db.update(id, req.user.username, {
             nome: nome.trim(), tipo,
             atributo:       atributo || null,
@@ -331,6 +340,7 @@ app.put('/api/cartas/:id', requireAuth, writeLimiter, async (req, res) => {
             efeito_pendulo: efeito_pendulo?.trim() || null,
             valor_link:     valor_link != null ? Number(valor_link) : null,
             setas_link:     setas_link || null,
+            raridade:       raridade   || null,
         });
         if (!atualizada) return res.status(404).json({ error: 'Carta não encontrada.' });
         res.json(atualizada);
@@ -351,6 +361,140 @@ app.delete('/api/cartas/:id', requireAuth, writeLimiter, async (req, res) => {
     } catch (e) {
         console.error('[DELETE /api/cartas/:id]', e.message);
         res.status(500).json({ error: 'Erro ao deletar carta.', ...errDetail(e) });
+    }
+});
+
+// ── Rotas de Decks ────────────────────────────────────────
+
+function validateDeck(body) {
+    const erros = [];
+    if (!body.nome || typeof body.nome !== 'string' || !body.nome.trim())
+        erros.push('Nome do deck é obrigatório.');
+    else if (body.nome.trim().length > 50)
+        erros.push('Nome do deck deve ter no máximo 50 caracteres.');
+    if (body.descricao && body.descricao.length > 200)
+        erros.push('Descrição deve ter no máximo 200 caracteres.');
+    for (const campo of ['principal', 'extra', 'side']) {
+        if (body[campo] !== undefined && !Array.isArray(body[campo]))
+            erros.push(`Campo "${campo}" deve ser um array.`);
+    }
+    return erros;
+}
+
+app.get('/api/decks', requireAuth, async (req, res) => {
+    try {
+        res.json(await db.allDecks(req.user.username));
+    } catch (e) {
+        console.error('[GET /api/decks]', e.message);
+        res.status(500).json({ error: 'Erro ao listar decks.', ...errDetail(e) });
+    }
+});
+
+app.post('/api/decks', requireAuth, writeLimiter, async (req, res) => {
+    const erros = validateDeck(req.body);
+    if (erros.length) return res.status(400).json({ error: erros[0], erros });
+    const { nome, descricao, principal = [], extra = [], side = [] } = req.body;
+    try {
+        const deck = await db.insertDeck({
+            username: req.user.username,
+            nome: nome.trim(),
+            descricao: descricao?.trim() || null,
+            principal: principal.map(Number),
+            extra:     extra.map(Number),
+            side:      side.map(Number),
+        });
+        res.status(201).json(deck);
+    } catch (e) {
+        console.error('[POST /api/decks]', e.message);
+        res.status(500).json({ error: 'Erro ao criar deck.', ...errDetail(e) });
+    }
+});
+
+app.get('/api/decks/:id', requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'ID inválido.' });
+    try {
+        const deck = await db.getDeck(id, req.user.username);
+        if (!deck) return res.status(404).json({ error: 'Deck não encontrado.' });
+        res.json(deck);
+    } catch (e) {
+        console.error('[GET /api/decks/:id]', e.message);
+        res.status(500).json({ error: 'Erro ao buscar deck.', ...errDetail(e) });
+    }
+});
+
+app.put('/api/decks/:id', requireAuth, writeLimiter, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'ID inválido.' });
+    const erros = validateDeck(req.body);
+    if (erros.length) return res.status(400).json({ error: erros[0], erros });
+    const { nome, descricao, principal = [], extra = [], side = [] } = req.body;
+    try {
+        const deck = await db.updateDeck(id, req.user.username, {
+            nome: nome.trim(),
+            descricao: descricao?.trim() || null,
+            principal: principal.map(Number),
+            extra:     extra.map(Number),
+            side:      side.map(Number),
+        });
+        if (!deck) return res.status(404).json({ error: 'Deck não encontrado.' });
+        res.json(deck);
+    } catch (e) {
+        console.error('[PUT /api/decks/:id]', e.message);
+        res.status(500).json({ error: 'Erro ao atualizar deck.', ...errDetail(e) });
+    }
+});
+
+app.delete('/api/decks/:id', requireAuth, writeLimiter, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'ID inválido.' });
+    try {
+        const ok = await db.deleteDeck(id, req.user.username);
+        if (!ok) return res.status(404).json({ error: 'Deck não encontrado.' });
+        res.json({ message: 'Deck deletado com sucesso.' });
+    } catch (e) {
+        console.error('[DELETE /api/decks/:id]', e.message);
+        res.status(500).json({ error: 'Erro ao deletar deck.', ...errDetail(e) });
+    }
+});
+
+// ── Rotas de Histórico ────────────────────────────────────
+
+app.get('/api/cartas/:id/historico', requireAuth, async (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'ID inválido.' });
+    try {
+        const carta = await db.get(id, req.user.username);
+        if (!carta) return res.status(404).json({ error: 'Carta não encontrada.' });
+        const hist = await db.getHistorico(id, req.user.username);
+        res.json(hist);
+    } catch (e) {
+        console.error('[GET /api/cartas/:id/historico]', e.message);
+        res.status(500).json({ error: 'Erro ao buscar histórico.', ...errDetail(e) });
+    }
+});
+
+app.post('/api/cartas/:id/reverter/:hid', requireAuth, writeLimiter, async (req, res) => {
+    const id  = Number(req.params.id);
+    const hid = Number(req.params.hid);
+    if (!Number.isInteger(id) || id < 1 || !Number.isInteger(hid) || hid < 1)
+        return res.status(400).json({ error: 'ID inválido.' });
+    try {
+        const entry = await db.getHistoricoEntry(hid, id, req.user.username);
+        if (!entry) return res.status(404).json({ error: 'Versão não encontrada.' });
+
+        const atual = await db.get(id, req.user.username);
+        if (!atual) return res.status(404).json({ error: 'Carta não encontrada.' });
+
+        // Salva versão atual como snapshot antes de reverter
+        await db.addHistorico(id, req.user.username, atual);
+
+        const { id: _i, username: _u, criado_em: _c, ...campos } = entry.dados;
+        const atualizada = await db.update(id, req.user.username, campos);
+        res.json(atualizada);
+    } catch (e) {
+        console.error('[POST /api/cartas/:id/reverter/:hid]', e.message);
+        res.status(500).json({ error: 'Erro ao reverter carta.', ...errDetail(e) });
     }
 });
 

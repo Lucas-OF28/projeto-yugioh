@@ -1,3 +1,6 @@
+if (!requireLogin()) throw new Error('not auth');
+initSidebar('card-form', 'Editor de Cartas');
+
 const API    = '/api/cartas';
 const YGOPRO = 'https://db.ygoprodeck.com/api/v7/cardinfo.php';
 
@@ -119,6 +122,7 @@ function getFormValues() {
         efeito_pendulo: document.getElementById('efeito_pendulo').value,
         valor_link:     document.getElementById('valor_link').value,
         setas_link:     Array.from(document.querySelectorAll('.seta-checkbox:checked')).map(cb => cb.value).join(','),
+        raridade:       document.getElementById('raridade').value,
     };
 }
 
@@ -133,6 +137,7 @@ function preencherFormulario(carta) {
     document.getElementById('tipo').value       = carta.tipo || 'MONSTRO';
     document.getElementById('descricao').value  = carta.descricao || '';
     document.getElementById('imagem').value     = carta.imagem || '';
+    document.getElementById('raridade').value   = carta.raridade || '';
 
     handleTipoChange();
 
@@ -169,9 +174,10 @@ async function init() {
     if (editId) {
         document.getElementById('pageTitle').textContent = 'Editar Carta';
         document.getElementById('submitBtn').textContent  = 'Salvar Alterações';
+        document.getElementById('historicoPanel').style.display = '';
         try {
-            const res = await fetch(`${API}/${editId}`);
-            if (!res.ok) throw new Error();
+            const res = await authFetch(`${API}/${editId}`);
+            if (!res || !res.ok) throw new Error();
             preencherFormulario(await res.json());
         } catch {
             showMsg('Erro ao carregar carta para edição.', 'error');
@@ -179,14 +185,73 @@ async function init() {
     } else if (cloneId) {
         document.getElementById('pageTitle').textContent = 'Clonar Carta';
         try {
-            const res = await fetch(`${API}/${cloneId}`);
-            if (!res.ok) throw new Error();
+            const res = await authFetch(`${API}/${cloneId}`);
+            if (!res || !res.ok) throw new Error();
             const carta = await res.json();
             carta.nome = carta.nome + ' (Cópia)';
             preencherFormulario(carta);
         } catch {
             showMsg('Erro ao carregar carta para clonar.', 'error');
         }
+    }
+}
+
+// ── Histórico de versões ──────────────────────────────────
+let historicoAberto = false;
+
+async function toggleHistorico() {
+    const list = document.getElementById('historicoList');
+    const btn  = document.getElementById('historicoToggleBtn');
+    historicoAberto = !historicoAberto;
+    list.style.display = historicoAberto ? '' : 'none';
+    btn.textContent = historicoAberto ? '▲ Fechar histórico' : '📋 Ver histórico de versões';
+
+    if (!historicoAberto) return;
+
+    list.innerHTML = '<p style="color:rgba(255,255,255,.4);font-size:.85rem">Carregando...</p>';
+    try {
+        const res  = await authFetch(`${API}/${editId}/historico`);
+        if (!res || !res.ok) throw new Error();
+        const hist = await res.json();
+
+        if (!hist.length) {
+            list.innerHTML = '<p style="color:rgba(255,255,255,.4);font-size:.85rem">Nenhuma versão salva ainda.</p>';
+            return;
+        }
+
+        list.innerHTML = hist.map(h => {
+            const dt = new Date(h.criado_em).toLocaleString('pt-BR');
+            return `
+            <div class="hist-entry">
+                <div class="hist-meta">
+                    <span class="hist-name">${esc(h.dados.nome || '?')}</span>
+                    <span class="hist-date">${dt}</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="reverterVersao(${h.id})">Reverter</button>
+            </div>`;
+        }).join('');
+    } catch {
+        list.innerHTML = '<p style="color:#e74c3c;font-size:.85rem">Erro ao carregar histórico.</p>';
+    }
+}
+
+async function reverterVersao(hid) {
+    if (!confirm('Reverter para esta versão? A versão atual será salva no histórico.')) return;
+    try {
+        const res = await authFetch(`${API}/${editId}/reverter/${hid}`, { method: 'POST' });
+        if (!res || !res.ok) {
+            const err = await res?.json().catch(() => ({}));
+            alert(err.error || 'Erro ao reverter.');
+            return;
+        }
+        const carta = await res.json();
+        preencherFormulario(carta);
+        showMsg('Versão restaurada com sucesso!', 'success');
+        historicoAberto = false;
+        document.getElementById('historicoList').style.display = 'none';
+        document.getElementById('historicoToggleBtn').textContent = '📋 Ver histórico de versões';
+    } catch {
+        alert('Erro de conexão.');
     }
 }
 
@@ -354,6 +419,7 @@ document.getElementById('cartaForm').addEventListener('submit', async function (
         efeito_pendulo: isPendulo ? (v.efeito_pendulo.trim() || null) : null,
         valor_link:     isLink    ? (v.valor_link !== '' ? parseInt(v.valor_link) : null) : null,
         setas_link:     isLink    ? (v.setas_link || null) : null,
+        raridade:       v.raridade || null,
     };
 
     const btn = document.getElementById('submitBtn');
@@ -372,7 +438,7 @@ document.getElementById('cartaForm').addEventListener('submit', async function (
 
         if (res.ok) {
             showMsg(editId ? 'Carta atualizada!' : 'Carta cadastrada!', 'success');
-            setTimeout(() => { window.location.href = 'verCartas.html'; }, 700);
+            setTimeout(() => { window.location.href = '/pages/gallery/'; }, 700);
         } else {
             const err = await res.json().catch(() => ({}));
             showMsg(err.error || 'Erro ao salvar carta.', 'error');
