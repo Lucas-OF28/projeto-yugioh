@@ -4,7 +4,12 @@ const helmet    = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path      = require('path');
 const https     = require('https');
+const bcrypt    = require('bcryptjs');
+const jwt       = require('jsonwebtoken');
 const db        = require('./database');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'yugioh-dev-secret-troque-em-producao';
+const JWT_EXPIRY = '7d';
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -145,6 +150,75 @@ function errDetail(e) {
     return isProd ? {} : { details: e.message };
 }
 
+// ── Auth middleware ──────────────────────────────────────
+function requireAuth(req, res, next) {
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith('Bearer '))
+        return res.status(401).json({ error: 'Autenticação necessária.' });
+    try {
+        req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ error: 'Token inválido ou expirado. Faça login novamente.' });
+    }
+}
+
+// ── Rotas de autenticação ────────────────────────────────
+
+app.post('/api/auth/register', writeLimiter, async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || typeof username !== 'string' || !username.trim())
+        return res.status(400).json({ error: 'Nome de usuário é obrigatório.' });
+    const u = username.trim();
+    if (u.length < 3 || u.length > 30)
+        return res.status(400).json({ error: 'Nome de usuário deve ter entre 3 e 30 caracteres.' });
+    if (!/^[a-zA-Z0-9_]+$/.test(u))
+        return res.status(400).json({ error: 'Nome de usuário deve conter apenas letras, números e _.' });
+    if (!password || typeof password !== 'string' || password.length < 6)
+        return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres.' });
+    if (password.length > 100)
+        return res.status(400).json({ error: 'Senha muito longa.' });
+
+    try {
+        const existing = await db.findUserByUsername(u);
+        if (existing) return res.status(409).json({ error: 'Nome de usuário já está em uso.' });
+
+        const hash  = await bcrypt.hash(password, 10);
+        await db.createUser(u, hash);
+        const token = jwt.sign({ username: u }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+        res.status(201).json({ token, username: u });
+    } catch (e) {
+        console.error('[POST /api/auth/register]', e.message);
+        res.status(500).json({ error: 'Erro ao criar conta.', ...errDetail(e) });
+    }
+});
+
+app.post('/api/auth/login', apiLimiter, async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password)
+        return res.status(400).json({ error: 'Usuário e senha são obrigatórios.' });
+
+    try {
+        const user = await db.findUserByUsername(username.trim());
+        if (!user) return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+
+        const ok = await bcrypt.compare(password, user.password);
+        if (!ok) return res.status(401).json({ error: 'Usuário ou senha incorretos.' });
+
+        const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+        res.json({ token, username: user.username });
+    } catch (e) {
+        console.error('[POST /api/auth/login]', e.message);
+        res.status(500).json({ error: 'Erro ao fazer login.', ...errDetail(e) });
+    }
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+    res.json({ username: req.user.username });
+});
+
 // ── Proxy de imagem (YGOPRODeck → base64 sem CORS) ───────
 app.get('/api/proxy-image', apiLimiter, (req, res) => {
     const { url } = req.query;
@@ -164,21 +238,21 @@ app.get('/api/proxy-image', apiLimiter, (req, res) => {
 
 // ── Rotas da API ─────────────────────────────────────────
 
-app.get('/api/cartas', async (req, res) => {
+app.get('/api/cartas', requireAuth, async (req, res) => {
     try {
-        res.json(await db.all());
+        res.json(await db.all(req.user.username));
     } catch (e) {
         console.error('[GET /api/cartas]', e.message);
         res.status(500).json({ error: 'Erro ao listar cartas.', ...errDetail(e) });
     }
 });
 
-app.get('/api/cartas/:id', async (req, res) => {
+app.get('/api/cartas/:id', requireAuth, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1)
         return res.status(400).json({ error: 'ID inválido.' });
     try {
-        const carta = await db.get(id);
+        const carta = await db.get(id, req.user.username);
         if (!carta) return res.status(404).json({ error: 'Carta não encontrada.' });
         res.json(carta);
     } catch (e) {
@@ -187,7 +261,7 @@ app.get('/api/cartas/:id', async (req, res) => {
     }
 });
 
-app.post('/api/cartas', writeLimiter, async (req, res) => {
+app.post('/api/cartas', requireAuth, writeLimiter, async (req, res) => {
     const erros = validateCarta(req.body);
     if (erros.length) return res.status(400).json({ error: erros[0], erros });
 
@@ -199,7 +273,7 @@ app.post('/api/cartas', writeLimiter, async (req, res) => {
 
     try {
         const nova = await db.insert({
-            nome: nome.trim(), tipo,
+            nome: nome.trim(), tipo, username: req.user.username,
             atributo:       atributo || null,
             nivel:          nivel ?? null,
             tipo_monstro:   tipo_monstro?.trim() || null,
@@ -224,7 +298,7 @@ app.post('/api/cartas', writeLimiter, async (req, res) => {
     }
 });
 
-app.put('/api/cartas/:id', writeLimiter, async (req, res) => {
+app.put('/api/cartas/:id', requireAuth, writeLimiter, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1)
         return res.status(400).json({ error: 'ID inválido.' });
@@ -239,7 +313,7 @@ app.put('/api/cartas/:id', writeLimiter, async (req, res) => {
     } = req.body;
 
     try {
-        const atualizada = await db.update(id, {
+        const atualizada = await db.update(id, req.user.username, {
             nome: nome.trim(), tipo,
             atributo:       atributo || null,
             nivel:          nivel ?? null,
@@ -266,12 +340,12 @@ app.put('/api/cartas/:id', writeLimiter, async (req, res) => {
     }
 });
 
-app.delete('/api/cartas/:id', writeLimiter, async (req, res) => {
+app.delete('/api/cartas/:id', requireAuth, writeLimiter, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id < 1)
         return res.status(400).json({ error: 'ID inválido.' });
     try {
-        const ok = await db.delete(id);
+        const ok = await db.delete(id, req.user.username);
         if (!ok) return res.status(404).json({ error: 'Carta não encontrada.' });
         res.json({ message: 'Carta deletada com sucesso.' });
     } catch (e) {

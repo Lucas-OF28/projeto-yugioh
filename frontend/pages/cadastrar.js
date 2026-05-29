@@ -164,6 +164,8 @@ function preencherFormulario(carta) {
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
+    if (!requireLogin()) return;
+
     if (editId) {
         document.getElementById('pageTitle').textContent = 'Editar Carta';
         document.getElementById('submitBtn').textContent  = 'Salvar Alterações';
@@ -361,11 +363,12 @@ document.getElementById('cartaForm').addEventListener('submit', async function (
     try {
         const method = editId ? 'PUT' : 'POST';
         const url    = editId ? `${API}/${editId}` : API;
-        const res    = await fetch(url, {
+        const res    = await authFetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
+        if (!res) return;
 
         if (res.ok) {
             showMsg(editId ? 'Carta atualizada!' : 'Carta cadastrada!', 'success');

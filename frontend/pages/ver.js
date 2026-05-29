@@ -10,16 +10,19 @@ let favorites    = new Set(JSON.parse(localStorage.getItem('ygo-favorites') || '
 
 // ── Wrapper com botões de ação ──────────────────────────────────
 function buildCardHTML(carta) {
-    const isFav = favorites.has(carta.id);
+    const isFav  = favorites.has(carta.id);
+    const isAuth = !!getToken();
     return `
     <div class="card-wrapper">
         ${buildYgoCard(carta, { clickable: true })}
         <div class="card-actions">
             <button class="btn-fav${isFav ? ' active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${carta.id})" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">★</button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); baixarCarta(${carta.id})">↓ Baixar</button>
+            ${isAuth ? `
             <a href="cadastrarCartas.html?id=${carta.id}"    class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">Editar</a>
             <a href="cadastrarCartas.html?clone=${carta.id}" class="btn btn-secondary btn-sm" onclick="event.stopPropagation()">Clonar</a>
-            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); baixarCarta(${carta.id})">↓ Baixar</button>
             <button class="btn btn-danger btn-sm"    onclick="event.stopPropagation(); deletar(${carta.id}, '${esc(carta.nome)}')">Deletar</button>
+            ` : ''}
         </div>
     </div>`;
 }
@@ -52,16 +55,27 @@ function getFiltered() {
     return sortCards(filtered);
 }
 
+// ── Stats do usuário ────────────────────────────────────────────
+function renderStats() {
+    document.getElementById('statTotal').textContent      = allCards.length;
+    document.getElementById('statMonstros').textContent   = allCards.filter(c => c.tipo === 'MONSTRO').length;
+    document.getElementById('statMagias').textContent     = allCards.filter(c => c.tipo === 'MAGIA').length;
+    document.getElementById('statArmadilhas').textContent = allCards.filter(c => c.tipo === 'ARMADILHA').length;
+}
+
 // ── Carregar e renderizar ───────────────────────────────────────
 async function loadCards() {
+    if (!requireLogin()) return;
+
     try {
-        const res = await fetch(API);
-        if (!res.ok) throw new Error();
+        const res = await authFetch(API);
+        if (!res || !res.ok) throw new Error();
         allCards = await res.json();
+        renderStats();
         renderCards();
     } catch {
         document.getElementById('cardsGrid').innerHTML =
-            '<div class="error-msg">Erro ao carregar cartas. Verifique se o servidor está rodando em http://localhost:3000</div>';
+            '<div class="error-msg">Erro ao carregar cartas. Verifique se o servidor está rodando.</div>';
     }
 }
 
@@ -85,14 +99,19 @@ function renderCards() {
 
 // ── Modal fullscreen ────────────────────────────────────────────
 function openModal(id) {
-    const carta = allCards.find(c => c.id === id);
+    const carta  = allCards.find(c => c.id === id);
     if (!carta) return;
+    const isAuth = !!getToken();
 
     document.getElementById('modalCardContainer').innerHTML = buildYgoCard(carta);
     document.getElementById('modalEditBtn').href  = `cadastrarCartas.html?id=${id}`;
     document.getElementById('modalCloneBtn').href = `cadastrarCartas.html?clone=${id}`;
     document.getElementById('modalDlBtn').onclick  = () => baixarCartaModal(id);
     document.getElementById('modalDelBtn').onclick = () => { closeModal(); deletar(id, carta.nome); };
+
+    document.getElementById('modalEditBtn').style.display  = isAuth ? '' : 'none';
+    document.getElementById('modalCloneBtn').style.display = isAuth ? '' : 'none';
+    document.getElementById('modalDelBtn').style.display   = isAuth ? '' : 'none';
 
     const favBtn = document.getElementById('modalFavBtn');
     const syncFavBtn = () => {
@@ -203,9 +222,9 @@ async function deletar(id, nome) {
     const confirmed = await showDeletePopup(nome);
     if (!confirmed) return;
     try {
-        const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
-        if (res.ok) { allCards = allCards.filter(c => c.id !== id); renderCards(); }
-        else alert('Erro ao deletar carta.');
+        const res = await authFetch(`${API}/${id}`, { method: 'DELETE' });
+        if (res && res.ok) { allCards = allCards.filter(c => c.id !== id); renderCards(); }
+        else if (res) alert('Erro ao deletar carta.');
     } catch { alert('Erro de conexão.'); }
 }
 

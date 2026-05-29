@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gerador de Cartas Yu-Gi-Oh" />
+    <meta name="description" content="Gerador de Cartas Yu-Gi-Oh — crie cartas personalizadas" />
     <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Bebas+Neue&display=swap"
@@ -20,34 +20,99 @@
         </div>
     </header>
 
-    <main class="home-main">
-        <div class="hero">
-            <h2 class="hero-title">Crie suas próprias cartas</h2>
-            <p class="hero-subtitle">Olá duelista! Construa seu deck personalizado e siga o coração das cartas.</p>
+    <main class="landing-main">
+        <div class="landing-grid">
 
-            <div class="hero-stats" id="statsContainer">
-                <div class="stat-card">
-                    <span class="stat-number" id="totalCartas">–</span>
-                    <span class="stat-label">Cartas</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="totalMonstros">–</span>
-                    <span class="stat-label">Monstros</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="totalMagias">–</span>
-                    <span class="stat-label">Magias</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="totalArmadilhas">–</span>
-                    <span class="stat-label">Armadilhas</span>
+            <!-- ── Coluna esquerda: info do site ── -->
+            <div class="landing-info">
+                <h2 class="landing-title">Crie suas próprias cartas</h2>
+                <p class="landing-desc">
+                    Monte seu deck personalizado com o editor mais completo de cartas
+                    Yu-Gi-Oh! em português. Crie monstros, magias e armadilhas com
+                    visual fiel ao original.
+                </p>
+
+                <div class="landing-features">
+                    <div class="feature-item">
+                        <span class="feature-icon">⚔️</span>
+                        <div>
+                            <strong>Editor completo</strong>
+                            <p>Suporte a Monstro, Magia e Armadilha — com Fusão, Sincro, XYZ, Pêndulo e Link.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🖼️</span>
+                        <div>
+                            <strong>Imagens reais</strong>
+                            <p>Busque qualquer carta oficial da base YGOPRODeck e use como base.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📥</span>
+                        <div>
+                            <strong>Exportação em PNG e PDF</strong>
+                            <p>Baixe suas cartas em alta resolução ou gere um álbum completo em PDF.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <div>
+                            <strong>Coleção privada</strong>
+                            <p>Cada duelista tem sua própria coleção — só você vê e gerencia suas cartas.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="home-buttons">
-                <a href="pages/verCartas.html" class="btn btn-primary">Ver Cartas</a>
-                <a href="pages/cadastrarCartas.html" class="btn btn-secondary">Nova Carta</a>
+            <!-- ── Coluna direita: login / cadastro ── -->
+            <div class="landing-auth">
+                <div class="auth-box">
+                    <h2 class="auth-title">Área do Duelista</h2>
+
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" data-tab="login">Entrar</button>
+                        <button class="auth-tab" data-tab="register">Criar Conta</button>
+                    </div>
+
+                    <!-- Login -->
+                    <form id="loginForm" class="auth-form" novalidate>
+                        <div class="form-group">
+                            <label for="loginUsername">Usuário</label>
+                            <input type="text" id="loginUsername" autocomplete="username"
+                                placeholder="Seu nome de usuário" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Senha</label>
+                            <input type="password" id="loginPassword" autocomplete="current-password"
+                                placeholder="Sua senha" required />
+                        </div>
+                        <div class="auth-msg" id="loginMsg"></div>
+                        <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+                    </form>
+
+                    <!-- Cadastro -->
+                    <form id="registerForm" class="auth-form" style="display:none" novalidate>
+                        <div class="form-group">
+                            <label for="regUsername">Usuário</label>
+                            <input type="text" id="regUsername" autocomplete="username"
+                                placeholder="3–30 caracteres, letras/números/_" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Senha</label>
+                            <input type="password" id="regPassword" autocomplete="new-password"
+                                placeholder="Mínimo 6 caracteres" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="regPasswordConfirm">Confirmar Senha</label>
+                            <input type="password" id="regPasswordConfirm" autocomplete="new-password"
+                                placeholder="Repita a senha" required />
+                        </div>
+                        <div class="auth-msg" id="registerMsg"></div>
+                        <button type="submit" class="btn btn-primary" style="width:100%">Criar Conta</button>
+                    </form>
+                </div>
             </div>
+
         </div>
     </main>
 
@@ -56,19 +121,101 @@
     </footer>
 
     <script>
-        async function loadStats() {
-            try {
-                const res = await fetch('/api/cartas');
-                const cartas = await res.json();
-                document.getElementById('totalCartas').textContent = cartas.length;
-                document.getElementById('totalMonstros').textContent = cartas.filter(c => c.tipo === 'MONSTRO').length;
-                document.getElementById('totalMagias').textContent = cartas.filter(c => c.tipo === 'MAGIA').length;
-                document.getElementById('totalArmadilhas').textContent = cartas.filter(c => c.tipo === 'ARMADILHA').length;
-            } catch {
-                document.getElementById('statsContainer').style.display = 'none';
-            }
+        const TOKEN_KEY = 'yugioh_token';
+
+        // Se já logado, vai direto para o dashboard
+        if (localStorage.getItem(TOKEN_KEY)) {
+            location.href = '/pages/verCartas.html';
         }
-        loadStats();
+
+        // Tabs
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const isLogin = tab.dataset.tab === 'login';
+                document.getElementById('loginForm').style.display    = isLogin ? '' : 'none';
+                document.getElementById('registerForm').style.display = isLogin ? 'none' : '';
+                document.getElementById('loginMsg').textContent    = '';
+                document.getElementById('registerMsg').textContent = '';
+            });
+        });
+
+        function setMsg(id, text, type) {
+            const el = document.getElementById(id);
+            el.textContent = text;
+            el.className   = 'auth-msg ' + type;
+        }
+
+        function afterLogin(token) {
+            localStorage.setItem(TOKEN_KEY, token);
+            location.href = '/pages/verCartas.html';
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const btn = this.querySelector('button[type="submit"]');
+
+            if (!username || !password) { setMsg('loginMsg', 'Preencha todos os campos.', 'error'); return; }
+
+            btn.disabled = true; btn.textContent = 'Entrando...';
+            setMsg('loginMsg', '', '');
+
+            try {
+                const res  = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    afterLogin(data.token);
+                } else {
+                    setMsg('loginMsg', data.error || 'Erro ao entrar.', 'error');
+                    btn.disabled = false; btn.textContent = 'Entrar';
+                }
+            } catch {
+                setMsg('loginMsg', 'Erro de conexão com o servidor.', 'error');
+                btn.disabled = false; btn.textContent = 'Entrar';
+            }
+        });
+
+        // Cadastro
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirm  = document.getElementById('regPasswordConfirm').value;
+            const btn = this.querySelector('button[type="submit"]');
+
+            if (!username || !password || !confirm) { setMsg('registerMsg', 'Preencha todos os campos.', 'error'); return; }
+            if (password !== confirm) { setMsg('registerMsg', 'As senhas não coincidem.', 'error'); return; }
+
+            btn.disabled = true; btn.textContent = 'Criando conta...';
+            setMsg('registerMsg', '', '');
+
+            try {
+                const res  = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setMsg('registerMsg', 'Conta criada! Entrando...', 'success');
+                    setTimeout(() => afterLogin(data.token), 600);
+                } else {
+                    setMsg('registerMsg', data.error || 'Erro ao criar conta.', 'error');
+                    btn.disabled = false; btn.textContent = 'Criar Conta';
+                }
+            } catch {
+                setMsg('registerMsg', 'Erro de conexão com o servidor.', 'error');
+                btn.disabled = false; btn.textContent = 'Criar Conta';
+            }
+        });
     </script>
 </body>
 

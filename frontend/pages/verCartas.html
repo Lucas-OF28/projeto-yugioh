@@ -25,9 +25,28 @@
 
     <main>
         <div class="page-header">
-            <a href="../index.html" class="btn-back">← Início</a>
-            <h2>Cartas Disponíveis</h2>
+            <h2 id="dashTitle">Minhas Cartas</h2>
             <a href="cadastrarCartas.html" class="btn btn-secondary btn-sm">+ Nova Carta</a>
+        </div>
+
+        <!-- Stats do usuário -->
+        <div class="user-stats" id="userStats">
+            <div class="stat-card">
+                <span class="stat-number" id="statTotal">–</span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="statMonstros">–</span>
+                <span class="stat-label">Monstros</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="statMagias">–</span>
+                <span class="stat-label">Magias</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="statArmadilhas">–</span>
+                <span class="stat-label">Armadilhas</span>
+            </div>
         </div>
 
         <!-- Filtros principais + Ordenação -->
@@ -118,6 +137,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="card-builder.js"></script>
     <script src="ver.js"></script>
 </body>
