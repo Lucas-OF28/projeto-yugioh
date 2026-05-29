@@ -4,17 +4,19 @@ initSidebar('decks', 'Meus Decks');
 const EXTRA_SUBTYPES = new Set(['Fusão', 'Sincro', 'XYZ', 'Link']);
 const deckId = new URLSearchParams(location.search).get('id');
 
-let allCards = [];   // coleção completa do usuário
-let deck = null;     // deck sendo editado (null = novo)
-
-// Seções do deck em edição: arrays de cardId (com repetição)
+let allCards    = [];
+let deck        = null;
 let deckPrincipal = [];
 let deckExtra     = [];
 let deckSide      = [];
 
 function esc(str) {
     return String(str || '').replace(/[&<>"']/g, m =>
-        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+}
+
+function typeIcon(tipo) {
+    return tipo === 'MONSTRO' ? '👹' : tipo === 'MAGIA' ? '✨' : '⚡';
 }
 
 // ── Popup de exclusão ────────────────────────────────────
@@ -25,7 +27,6 @@ function showDeleteDeckPopup(nome) {
         const btnConf = document.getElementById('deleteDeckConfirm');
         const btnCanc = document.getElementById('deleteDeckCancel');
         overlay.classList.add('active');
-
         const done = v => {
             overlay.classList.remove('active');
             btnConf.removeEventListener('click', onY);
@@ -39,11 +40,40 @@ function showDeleteDeckPopup(nome) {
     });
 }
 
+// ── Capa do deck ─────────────────────────────────────────
+function buildCoverHTML(deck, cards) {
+    if (deck.capa) {
+        return `<img class="deck-cover-img-single" src="${esc(deck.capa)}" alt="Capa" onerror="this.replaceWith(buildCoverPlaceholder())">`;
+    }
+    const ids     = [...(deck.principal || [])];
+    const unique  = [...new Set(ids)].slice(0, 4);
+    const wImages = unique.map(id => cards.find(c => c.id === id)).filter(c => c?.imagem);
+
+    if (!wImages.length) return coverPlaceholderHTML();
+
+    const cnt = Math.min(wImages.length, 4);
+    const cls = ['', 'one', 'two', 'three', ''][cnt] || '';
+    return `<div class="deck-cover-collage ${cls}">
+        ${wImages.slice(0, cnt).map(c =>
+            `<img src="${esc(c.imagem)}" alt="${esc(c.nome)}" onerror="this.style.display='none'">`
+        ).join('')}
+    </div>`;
+}
+
+function coverPlaceholderHTML() {
+    return `<div class="deck-cover-placeholder">📁<span>Sem capa</span></div>`;
+}
+
 // ── Lista de decks ───────────────────────────────────────
 async function showDeckList() {
-    const res = await authFetch('/api/decks');
-    if (!res) return;
-    const decks = await res.json();
+    const [resD, resC] = await Promise.all([
+        authFetch('/api/decks'),
+        authFetch('/api/cartas'),
+    ]);
+    if (!resD || !resC) return;
+
+    const decks = await resD.json();
+    const cards = await resC.json();
 
     const main = document.getElementById('appMain');
     main.innerHTML = `
@@ -66,21 +96,22 @@ async function showDeckList() {
     }
 
     grid.innerHTML = decks.map(d => {
-        const tot = (d.principal?.length || 0) + (d.extra?.length || 0) + (d.side?.length || 0);
-        const p   = d.principal?.length || 0;
-        const warnP = p < 40 || p > 60;
-        const e   = d.extra?.length || 0;
-        const s   = d.side?.length  || 0;
+        const p = d.principal?.length || 0;
+        const e = d.extra?.length     || 0;
+        const s = d.side?.length      || 0;
+        const warnP = p > 0 && (p < 40 || p > 60);
         return `
         <div class="deck-card">
-            <div class="deck-info">
+            <div class="deck-cover">${buildCoverHTML(d, cards)}</div>
+            <div class="deck-card-body">
                 <div class="deck-name">${esc(d.nome)}</div>
                 ${d.descricao ? `<div class="deck-desc">${esc(d.descricao)}</div>` : ''}
                 <div class="deck-counts">
-                    <span class="deck-count-badge ${warnP ? 'warn' : 'ok'}">Principal: ${p}/60</span>
-                    <span class="deck-count-badge${e > 15 ? ' warn' : ''}">Extra: ${e}/15</span>
+                    <span class="deck-count-badge ${warnP ? 'warn' : p > 0 ? 'ok' : ''}">
+                        Principal: ${p}/60
+                    </span>
+                    <span class="deck-count-badge${e > 15 ? ' warn' : e > 0 ? ' ok' : ''}">Extra: ${e}/15</span>
                     <span class="deck-count-badge${s > 15 ? ' warn' : ''}">Side: ${s}/15</span>
-                    <span class="deck-count-badge">Total: ${tot}</span>
                 </div>
             </div>
             <div class="deck-actions">
@@ -101,7 +132,6 @@ async function deletarDeck(id, nome) {
 
 // ── Editor de deck ───────────────────────────────────────
 async function showEditor() {
-    // Carrega coleção do usuário
     const resC = await authFetch('/api/cartas');
     if (!resC) return;
     allCards = await resC.json();
@@ -109,23 +139,25 @@ async function showEditor() {
     if (deckId !== 'novo') {
         const resD = await authFetch(`/api/decks/${deckId}`);
         if (!resD || !resD.ok) { alert('Deck não encontrado.'); location.href = '/pages/decks/'; return; }
-        deck = await resD.json();
+        deck         = await resD.json();
         deckPrincipal = [...(deck.principal || [])];
         deckExtra     = [...(deck.extra     || [])];
         deckSide      = [...(deck.side      || [])];
     } else {
-        deckPrincipal = [];
-        deckExtra     = [];
-        deckSide      = [];
+        deckPrincipal = []; deckExtra = []; deckSide = [];
     }
 
-    const nome = deck?.nome || '';
-    const desc = deck?.descricao || '';
+    const nome      = deck?.nome || '';
+    const desc      = deck?.descricao || '';
+    const capaVal   = deck?.capa || '';
+    const capaThumb = capaVal
+        ? `<img src="${esc(capaVal)}" alt="Capa">`
+        : '🖼️';
 
     document.getElementById('appMain').innerHTML = `
-    <div class="page-header" style="max-width:1200px;margin:0 auto;padding:1.25rem 1.5rem;">
+    <div class="page-header" style="max-width:1300px;margin:0 auto;padding:1.25rem 1.5rem;">
         <a href="/pages/decks/" class="btn-back">← Meus Decks</a>
-        <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:1.3rem;">
+        <h2 style="font-family:'Cinzel',serif;color:var(--gold);font-size:1.2rem;">
             ${deckId === 'novo' ? 'Novo Deck' : 'Editar Deck'}
         </h2>
         <div style="width:80px"></div>
@@ -152,24 +184,42 @@ async function showEditor() {
             <textarea id="deckDescInput" class="deck-desc-input" rows="2"
                 placeholder="Descrição (opcional)..." maxlength="200">${esc(desc)}</textarea>
 
+            <!-- Capa personalizada -->
+            <div class="deck-capa-section">
+                <div class="deck-capa-preview" id="capaPreview">${capaThumb}</div>
+                <div class="deck-capa-inputs">
+                    <div class="deck-capa-label">Capa do Deck</div>
+                    <input type="text" id="capaUrl" class="deck-capa-url"
+                        placeholder="Cole uma URL de imagem..." value="${esc(capaVal)}"
+                        oninput="onCapaUrlChange()" />
+                    <label class="deck-capa-upload">
+                        📁 Selecionar arquivo
+                        <input type="file" id="capaFile" accept="image/*" hidden onchange="onCapaFileChange(event)">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Deck Principal -->
             <div class="deck-section">
                 <div class="deck-section-header">
                     <span class="deck-section-title">Deck Principal</span>
                     <span class="deck-section-count" id="countP">0/60</span>
-                    <span style="font-size:.75rem;color:rgba(255,255,255,.35)">(40–60 recomendado)</span>
+                    <span style="font-size:.72rem;color:rgba(255,255,255,.3)">(40–60 recomendado)</span>
                 </div>
                 <div class="deck-section-items" id="itemsP"></div>
             </div>
 
+            <!-- Deck Extra -->
             <div class="deck-section">
                 <div class="deck-section-header">
                     <span class="deck-section-title">Deck Extra</span>
                     <span class="deck-section-count" id="countE">0/15</span>
-                    <span style="font-size:.75rem;color:rgba(255,255,255,.35)">(Fusão, Sincro, XYZ, Link)</span>
+                    <span style="font-size:.72rem;color:rgba(255,255,255,.3)">(Fusão, Sincro, XYZ, Link)</span>
                 </div>
                 <div class="deck-section-items" id="itemsE"></div>
             </div>
 
+            <!-- Side Deck -->
             <div class="deck-section">
                 <div class="deck-section-header">
                     <span class="deck-section-title">Side Deck</span>
@@ -192,27 +242,64 @@ async function showEditor() {
     renderDeckSections();
 }
 
+// ── Capa: URL e arquivo ───────────────────────────────────
+function onCapaUrlChange() {
+    const url = document.getElementById('capaUrl').value.trim();
+    const preview = document.getElementById('capaPreview');
+    if (url) {
+        preview.innerHTML = `<img src="${esc(url)}" alt="Capa" onerror="this.parentElement.innerHTML='🖼️'">`;
+    } else {
+        preview.innerHTML = '🖼️';
+    }
+}
+
+function onCapaFileChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const base64 = ev.target.result;
+        document.getElementById('capaUrl').value = base64;
+        document.getElementById('capaPreview').innerHTML = `<img src="${base64}" alt="Capa">`;
+    };
+    reader.readAsDataURL(file);
+}
+
+// ── Coleção com imagens ───────────────────────────────────
 function filterCollection() {
-    const q = (document.getElementById('collSearch')?.value || '').toLowerCase().trim();
-    const filtered = allCards.filter(c => !q || c.nome.toLowerCase().includes(q));
+    const q    = (document.getElementById('collSearch')?.value || '').toLowerCase().trim();
     const list = document.getElementById('collList');
     if (!list) return;
 
-    list.innerHTML = filtered.length
-        ? filtered.map(c => {
-            const sub = c.tipo === 'MONSTRO' ? (c.tipo_efeito || 'Efeito') : c.tipo;
-            return `
-            <div class="coll-item">
-                <div class="coll-item-info">
-                    <div class="coll-item-name">${esc(c.nome)}</div>
-                    <div class="coll-item-type">${sub}</div>
-                </div>
-                <button class="coll-item-add" onclick="addToDeck(${c.id})" title="Adicionar ao deck">+</button>
-            </div>`;
-        }).join('')
-        : '<div style="padding:1rem;color:rgba(255,255,255,.35);font-size:.85rem">Nenhuma carta encontrada.</div>';
+    const filtered = allCards.filter(c => !q || c.nome.toLowerCase().includes(q));
+    if (!filtered.length) {
+        list.innerHTML = '<div style="padding:1rem;color:rgba(255,255,255,.35);font-size:.85rem">Nenhuma carta encontrada.</div>';
+        return;
+    }
+
+    list.innerHTML = filtered.map(c => {
+        const sub     = c.tipo === 'MONSTRO' ? (c.tipo_efeito || 'Efeito') : c.tipo;
+        const copies  = copiesInDeck(c.id);
+        const imgHtml = c.imagem
+            ? `<img src="${esc(c.imagem)}" alt="${esc(c.nome)}" onerror="this.parentElement.innerHTML='${typeIcon(c.tipo)}'">`
+            : typeIcon(c.tipo);
+        return `
+        <div class="coll-item">
+            <div class="coll-item-thumb">${imgHtml}</div>
+            <div class="coll-item-info">
+                <div class="coll-item-name">${esc(c.nome)}</div>
+                <div class="coll-item-type">${sub}</div>
+            </div>
+            ${copies > 0 ? `<span class="coll-item-count">×${copies}</span>` : ''}
+            <div class="coll-item-actions">
+                <button class="coll-item-add" onclick="addToDeck(${c.id})" title="Adicionar ao Principal/Extra">+</button>
+                <button class="coll-item-add side" onclick="addToSide(${c.id})" title="Adicionar ao Side Deck">S</button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
+// ── Lógica de deck ────────────────────────────────────────
 function copiesInDeck(id) {
     return [deckPrincipal, deckExtra, deckSide].reduce((n, arr) => n + arr.filter(x => x === id).length, 0);
 }
@@ -220,13 +307,8 @@ function copiesInDeck(id) {
 function addToDeck(id) {
     const carta = allCards.find(c => c.id === id);
     if (!carta) return;
-
-    if (copiesInDeck(id) >= 3) {
-        showSaveMsg('Máximo de 3 cópias por carta no deck.', 'error'); return;
-    }
-
+    if (copiesInDeck(id) >= 3) { showSaveMsg('Máximo de 3 cópias por carta no deck.', 'error'); return; }
     const isExtra = carta.tipo === 'MONSTRO' && EXTRA_SUBTYPES.has(carta.tipo_efeito);
-
     if (isExtra) {
         if (deckExtra.length >= 15) { showSaveMsg('Extra Deck cheio (máx 15).', 'error'); return; }
         deckExtra.push(id);
@@ -234,21 +316,26 @@ function addToDeck(id) {
         if (deckPrincipal.length >= 60) { showSaveMsg('Deck Principal cheio (máx 60).', 'error'); return; }
         deckPrincipal.push(id);
     }
-    renderDeckSections();
-}
-
-function removeFromSection(section, id) {
-    const arr = section === 'P' ? deckPrincipal : section === 'E' ? deckExtra : deckSide;
-    const idx = arr.lastIndexOf(id);
-    if (idx !== -1) arr.splice(idx, 1);
-    renderDeckSections();
+    refreshAfterAdd();
 }
 
 function addToSide(id) {
     if (copiesInDeck(id) >= 3) { showSaveMsg('Máximo de 3 cópias por carta.', 'error'); return; }
     if (deckSide.length >= 15) { showSaveMsg('Side Deck cheio (máx 15).', 'error'); return; }
     deckSide.push(id);
+    refreshAfterAdd();
+}
+
+function refreshAfterAdd() {
     renderDeckSections();
+    filterCollection(); // atualiza contador de cópias no painel esquerdo
+}
+
+function removeFromSection(section, id) {
+    const arr = section === 'P' ? deckPrincipal : section === 'E' ? deckExtra : deckSide;
+    const idx = arr.lastIndexOf(id);
+    if (idx !== -1) arr.splice(idx, 1);
+    refreshAfterAdd();
 }
 
 function renderDeckSections() {
@@ -258,29 +345,40 @@ function renderDeckSections() {
 }
 
 function renderSection(key, arr, max, [min, maxVal]) {
-    const count    = arr.length;
-    const countEl  = document.getElementById(`count${key}`);
-    const itemsEl  = document.getElementById(`items${key}`);
+    const countEl = document.getElementById(`count${key}`);
+    const itemsEl = document.getElementById(`items${key}`);
     if (!countEl || !itemsEl) return;
 
-    const warn = count > maxVal || (key === 'P' && count > 0 && count < min);
+    const count = arr.length;
+    const warn  = count > maxVal || (key === 'P' && count > 0 && count < min);
     countEl.textContent = `${count}/${maxVal}`;
-    countEl.className = `deck-section-count ${warn ? 'warn' : count > 0 ? 'ok' : ''}`;
+    countEl.className   = `deck-section-count ${warn ? 'warn' : count > 0 ? 'ok' : ''}`;
 
-    // Agrupa por id
+    if (!count) {
+        itemsEl.innerHTML = '<span class="deck-section-empty">Vazio — clique em + na coleção para adicionar</span>';
+        return;
+    }
+
+    // Agrupa por id mantendo ordem de inserção
     const groups = {};
     arr.forEach(id => { groups[id] = (groups[id] || 0) + 1; });
 
     itemsEl.innerHTML = Object.entries(groups).map(([id, qty]) => {
         const c = allCards.find(c => c.id === Number(id));
         if (!c) return '';
+
+        const imgHtml = c.imagem
+            ? `<img src="${esc(c.imagem)}" alt="${esc(c.nome)}" onerror="this.parentElement.innerHTML='${typeIcon(c.tipo)}'">`
+            : typeIcon(c.tipo);
+
         return `
-        <div class="deck-item" title="${esc(c.nome)}">
-            <span class="deck-item-name">${esc(c.nome)}</span>
-            ${qty > 1 ? `<span class="deck-item-count">×${qty}</span>` : ''}
-            <span class="deck-item-remove" onclick="removeFromSection('${key}', ${id})" title="Remover uma cópia">✕</span>
+        <div class="deck-img-card" title="${esc(c.nome)}">
+            <div class="deck-img-card-img">${imgHtml}</div>
+            ${qty > 1 ? `<span class="deck-img-card-badge">×${qty}</span>` : ''}
+            <button class="deck-img-card-remove" onclick="removeFromSection('${key}', ${id})" title="Remover uma cópia">✕</button>
+            <div class="deck-img-card-name">${esc(c.nome)}</div>
         </div>`;
-    }).join('') || '<span style="color:rgba(255,255,255,.25);font-size:.8rem;padding:4px 6px">Vazio</span>';
+    }).join('');
 }
 
 function showSaveMsg(msg, type) {
@@ -289,16 +387,18 @@ function showSaveMsg(msg, type) {
     el.textContent = msg;
     el.className   = `deck-save-msg ${type}`;
     if (type === 'success') setTimeout(() => { el.textContent = ''; el.className = 'deck-save-msg'; }, 3000);
+    if (type === 'error')   setTimeout(() => { el.textContent = ''; el.className = 'deck-save-msg'; }, 4000);
 }
 
 async function salvarDeck() {
     const nome = document.getElementById('deckNameInput')?.value.trim();
     const desc = document.getElementById('deckDescInput')?.value.trim() || null;
+    const capa = document.getElementById('capaUrl')?.value.trim() || null;
     if (!nome) { showSaveMsg('Nome do deck é obrigatório.', 'error'); return; }
 
-    const payload = { nome, descricao: desc, principal: deckPrincipal, extra: deckExtra, side: deckSide };
-    const url    = deckId === 'novo' ? '/api/decks' : `/api/decks/${deckId}`;
-    const method = deckId === 'novo' ? 'POST' : 'PUT';
+    const payload = { nome, descricao: desc, capa, principal: deckPrincipal, extra: deckExtra, side: deckSide };
+    const url     = deckId === 'novo' ? '/api/decks' : `/api/decks/${deckId}`;
+    const method  = deckId === 'novo' ? 'POST' : 'PUT';
 
     const res = await authFetch(url, {
         method,
@@ -321,7 +421,7 @@ async function salvarDeck() {
     }
 }
 
-// ── Init ────────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────
 if (deckId) {
     showEditor();
 } else {

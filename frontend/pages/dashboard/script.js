@@ -5,6 +5,24 @@ function pct(n, total) {
     return total ? `${Math.round(n / total * 100)}% do total` : '–';
 }
 
+function buildDeckCoverHTML(deck, cards) {
+    if (deck.capa) {
+        return `<img class="deck-mini-cover-img" src="${_esc(deck.capa)}" alt="Capa" onerror="this.parentElement.innerHTML='<div class=deck-mini-cover-placeholder>📁</div>'">`;
+    }
+    const unique   = [...new Set(deck.principal || [])].slice(0, 4);
+    const wImages  = unique.map(id => cards.find(c => c.id === id)).filter(c => c?.imagem);
+    if (!wImages.length) {
+        return `<div class="deck-mini-cover-placeholder">📁</div>`;
+    }
+    const cnt = Math.min(wImages.length, 4);
+    const cls = ['', 'one', 'two', 'three', ''][cnt] || '';
+    return `<div class="deck-mini-cover-collage ${cls}">
+        ${wImages.slice(0, cnt).map(c =>
+            `<img src="${_esc(c.imagem)}" alt="" onerror="this.style.display='none'">`
+        ).join('')}
+    </div>`;
+}
+
 function _esc(str) {
     return String(str || '').replace(/[&<>"']/g, m =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
@@ -95,8 +113,11 @@ async function loadDashboard() {
     } else {
         rdEl.innerHTML = recentDecks.map(d => `
             <a href="/pages/decks/?id=${d.id}" class="deck-mini-card">
-                <div class="deck-mini-name">${_esc(d.nome)}</div>
-                <div class="deck-mini-counts">${(d.principal?.length || 0)} + ${(d.extra?.length || 0)} + ${(d.side?.length || 0)} cartas</div>
+                <div class="deck-mini-cover">${buildDeckCoverHTML(d, cartas)}</div>
+                <div class="deck-mini-info">
+                    <div class="deck-mini-name">${_esc(d.nome)}</div>
+                    <div class="deck-mini-counts">${(d.principal?.length || 0)} + ${(d.extra?.length || 0)} + ${(d.side?.length || 0)} cartas</div>
+                </div>
             </a>`).join('') + newBtn;
     }
 

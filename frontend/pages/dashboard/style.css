@@ -282,29 +282,97 @@
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 8px;
-    padding: 0.7rem 0.85rem;
     cursor: pointer;
     text-decoration: none;
-    display: block;
-    transition: border-color 0.18s, background 0.18s;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.18s, transform 0.18s;
 }
 
 .deck-mini-card:hover {
-    border-color: rgba(212,160,23,0.4);
-    background: rgba(212,160,23,0.06);
+    border-color: rgba(212,160,23,0.45);
+    transform: translateY(-2px);
+}
+
+/* Capa do deck no dashboard */
+.deck-mini-cover {
+    width: 100%;
+    height: 72px;
+    position: relative;
+    background: linear-gradient(135deg, #1a1a3e 0%, #0d0d1a 100%);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.deck-mini-cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.deck-mini-cover-collage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+}
+
+.deck-mini-cover-collage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.deck-mini-cover-collage.one   { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.deck-mini-cover-collage.two   { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+.deck-mini-cover-collage.three img:first-child { grid-column: 1 / -1; }
+
+.deck-mini-cover-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: rgba(212,160,23,0.2);
+}
+
+/* Info abaixo da capa */
+.deck-mini-info {
+    padding: 0.55rem 0.7rem;
+}
+
+.deck-mini-name {
+    font-size: 0.8rem;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.deck-mini-counts {
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.38);
 }
 
 .deck-mini-card.new-deck {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
     gap: 4px;
     border-style: dashed;
     border-color: rgba(255,255,255,0.15);
     color: rgba(255,255,255,0.35);
     font-size: 0.82rem;
-    min-height: 70px;
+    min-height: 100px;
 }
 
 .deck-mini-card.new-deck .plus { font-size: 1.4rem; }

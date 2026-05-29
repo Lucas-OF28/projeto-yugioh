@@ -393,12 +393,13 @@ app.get('/api/decks', requireAuth, async (req, res) => {
 app.post('/api/decks', requireAuth, writeLimiter, async (req, res) => {
     const erros = validateDeck(req.body);
     if (erros.length) return res.status(400).json({ error: erros[0], erros });
-    const { nome, descricao, principal = [], extra = [], side = [] } = req.body;
+    const { nome, descricao, capa, principal = [], extra = [], side = [] } = req.body;
     try {
         const deck = await db.insertDeck({
             username: req.user.username,
             nome: nome.trim(),
             descricao: descricao?.trim() || null,
+            capa:      capa              || null,
             principal: principal.map(Number),
             extra:     extra.map(Number),
             side:      side.map(Number),
@@ -428,11 +429,12 @@ app.put('/api/decks/:id', requireAuth, writeLimiter, async (req, res) => {
     if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'ID inválido.' });
     const erros = validateDeck(req.body);
     if (erros.length) return res.status(400).json({ error: erros[0], erros });
-    const { nome, descricao, principal = [], extra = [], side = [] } = req.body;
+    const { nome, descricao, capa, principal = [], extra = [], side = [] } = req.body;
     try {
         const deck = await db.updateDeck(id, req.user.username, {
             nome: nome.trim(),
             descricao: descricao?.trim() || null,
+            capa:      capa              || null,
             principal: principal.map(Number),
             extra:     extra.map(Number),
             side:      side.map(Number),
